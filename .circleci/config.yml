@@ -1,0 +1,38 @@
+version: 2
+jobs:
+    build:
+        docker:
+            - image: level12/python-test-multi
+            - image: postgres:9.6
+              environment:
+                  POSTGRES_USER: postgres
+                  POSTGRES_PASSWORD: password
+        steps:
+            - checkout
+
+            - run:
+                name: folder listing for debugging
+                command: ls -al
+
+            - run:
+                name: install tox and upgrade pip
+                command: python3.5 -m pip install -U pip tox pipenv
+
+            - run:
+                name: version checks
+                command: |
+                    python --version
+                    pip --version
+                    virtualenv --version
+                    tox --version
+
+            - run:
+                name: run tox
+                command: tox
+
+            - store_test_results:
+                path: .ci/test-reports/
+
+            - run:
+                name: push code coverage
+                command: bash <(curl -s https://codecov.io/bash) -X coveragepy -t abc

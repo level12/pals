@@ -1,0 +1,15 @@
+[[source]]
+url = "https://pypi.org/simple"
+name = "pypi"
+verify_ssl = true
+
+[dev-packages]
+
+[requires]
+
+[packages]
+pytest = "*"
+plocks = {editable = true, path = "."}
+pytest-cov = "*"
+sqlalchemy = "*"
+check-manifest = "*"

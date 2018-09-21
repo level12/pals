@@ -1,0 +1,12 @@
+MANIFEST
+*.egg-info
+*.pyc
+.coverage
+coverage.xml
+.tox/
+.cache/
+.ci/test-reports/*.xml
+dist
+build
+.pytest_cache
+.vscode
