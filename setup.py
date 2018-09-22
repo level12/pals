@@ -13,7 +13,7 @@ with open(version_fpath) as fo:
 setup(
     name="PLocks",
     version=version_globals['VERSION'],
-    description=("Easy distributed locking using PostgreSQL Advisory Locks."),
+    description="Easy distributed locking using PostgreSQL Advisory Locks.",
     long_description='\n\n'.join((README, CHANGELOG)),
     author="Randy Syring",
     author_email="randy.syring@level12.io",
@@ -23,8 +23,6 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: BSD License',
         'Operating System :: OS Independent',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',

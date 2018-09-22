@@ -7,7 +7,7 @@ import pytest
 import plocks
 
 
-locker = plocks.Locker('plocker-tests', 'postgresql://rsyring@/test')
+locker = plocks.Locker('plocker-tests', 'postgresql://postgres:password@localhost/postgres')
 
 
 def random_str(length):
