@@ -1,1 +1,3 @@
-include *.rst *.ini *.txt *.cfg
+include *.rst *.ini *.txt *.cfg .coveragerc Pipfile*
+include .ci/*
+include .circleci/*

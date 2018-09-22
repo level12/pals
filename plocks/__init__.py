@@ -1,1 +1,1 @@
-from plocks.core import *
+from plocks.core import *  # noqa

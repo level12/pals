@@ -4,6 +4,7 @@ name = "pypi"
 verify_ssl = true
 
 [dev-packages]
+restview = "*"
 
 [requires]
 
@@ -13,3 +14,4 @@ plocks = {editable = true, path = "."}
 pytest-cov = "*"
 sqlalchemy = "*"
 check-manifest = "*"
+docutils = "*"
