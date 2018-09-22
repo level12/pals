@@ -116,6 +116,21 @@ Usage
     except plocks.AquireFailure:
         pass
 
+
+Running Tests Locally
+---------------------
+
+::
+
+    $ docker-compose up -d
+    $ pipenv install --dev
+    $ pipenv shell
+    $ export PLOCKS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
+    $ pytest plocks/tests.py
+
+You can also put the environment variable in a .env file and pipenv will pick it up.
+
+
 See Also
 ---------
 

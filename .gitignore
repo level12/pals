@@ -10,3 +10,4 @@ dist
 build
 .pytest_cache
 .vscode
+.env

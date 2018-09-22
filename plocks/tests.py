@@ -1,4 +1,5 @@
 import gc
+import os
 import random
 import string
 
@@ -6,8 +7,9 @@ import pytest
 
 import plocks
 
-
-locker = plocks.Locker('plocker-tests', 'postgresql://postgres:password@localhost/postgres')
+# Default URL will work for CI tests
+db_url = os.environ.get('PLOCKS_DB_URL', 'postgresql://postgres:password@localhost/postgres')
+locker = plocks.Locker('plocker-tests', db_url)
 
 
 def random_str(length):
