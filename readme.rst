@@ -10,7 +10,7 @@ PostgreSQL Locks (PLocks)
 
 
 Introduction
----------------
+============
 
 PLocks makes it easy to use `PostgreSQL Advisory Locks`_ to do distributed application level
 locking.
@@ -18,7 +18,7 @@ locking.
 Do not confuse this type of locking with table or row locking in PostgreSQL.  It's not the same
 thing.
 
-Distributed application level locking can be implimented by using Redis, memcache, ZeroMQ and
+Distributed application level locking can be implemented by using Redis, Memcache, ZeroMQ and
 others.  But for those who are already using PostgreSQL, setup & management of another service is
 unnecessary.
 
@@ -31,17 +31,17 @@ Unlike locking systems built on cache services like Memcache and Redis, whose ke
 by the service, there is no faculty for expiring an advisory lock in PostgreSQL.  If a client
 holds a lock and then sleeps/hangs for mins/hours/days, no other client will be able to get that
 lock until the client releases it.  This actually seems like a good thing to us, if a lock is
-aquired, it should be kept until released.
+acquired, it should be kept until released.
 
 But what about accidental failures to release the lock?
 
 1. If a developer uses `lock.aquire()` but doesn't later call `lock.release()`?
-2. If code inside a lock accidentlly throws an exception (and .release() is not called)?
+2. If code inside a lock accidentally throws an exception (and .release() is not called)?
 3. If the process running the application crashes or the process' server dies?
 
 Plock helps #1 and #2 above in a few different ways:
 
-* Locks work as contex managers.  Use them as much as possible to guarantee a lock is released.
+* Locks work as context managers.  Use them as much as possible to guarantee a lock is released.
 * Locks release their lock when garbage collected.
 * Plock uses a dedicated SQLAlchemy connection pool.  When a connection is returned to the pool,
   either because a connection `.close()` is called or due to garbage collection of the connection,
@@ -59,7 +59,7 @@ to end the Python process without PostgreSQL detecting it.
 
 
 Usage
---------------
+========
 
 .. code:: python
 
@@ -118,21 +118,34 @@ Usage
 
 
 Running Tests Locally
----------------------
+=====================
 
-::
+Setup Database Connection
+-------------------------
+
+We have provided a docker-compose file, but you don't have to use it::
 
     $ docker-compose up -d
-    $ pipenv install --dev
-    $ pipenv shell
     $ export PLOCKS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
-    $ pytest plocks/tests.py
 
 You can also put the environment variable in a .env file and pipenv will pick it up.
 
+Run the Tests
+-------------
+
+With tox::
+
+    $ tox
+
+Or, manually::
+
+    $ pipenv install --dev
+    $ pipenv shell
+    $ pytest plocks/tests.py
+
 
 See Also
----------
+==========
 
 * https://vladmihalcea.com/how-do-postgresql-advisory-locks-work/
 * https://github.com/binded/advisory-lock
