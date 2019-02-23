@@ -1,18 +1,18 @@
 .. default-role:: code
 
-PostgreSQL Locks (PLocks)
-#########################
+PostgreSQL Advisory Locks (PALs)
+################################
 
-.. image:: https://circleci.com/gh/level12/plocks.svg?style=shield
-    :target: https://circleci.com/gh/level12/plocks
-.. image:: https://codecov.io/gh/level12/plocks/branch/master/graph/badge.svg
-    :target: https://codecov.io/gh/level12/plocks
+.. image:: https://circleci.com/gh/level12/pals.svg?style=shield
+    :target: https://circleci.com/gh/level12/pals
+.. image:: https://codecov.io/gh/level12/pals/branch/master/graph/badge.svg
+    :target: https://codecov.io/gh/level12/pals
 
 
 Introduction
 ============
 
-PLocks makes it easy to use `PostgreSQL Advisory Locks`_ to do distributed application level
+PALs makes it easy to use `PostgreSQL Advisory Locks`_ to do distributed application level
 locking.
 
 Do not confuse this type of locking with table or row locking in PostgreSQL.  It's not the same
@@ -24,39 +24,6 @@ unnecessary.
 
 .. _PostgreSQL Advisory Locks: https://www.postgresql.org/docs/current/static/explicit-locking.html
 
-Lock Releasing & Expiration
----------------------------
-
-Unlike locking systems built on cache services like Memcache and Redis, whose keys can be expired
-by the service, there is no faculty for expiring an advisory lock in PostgreSQL.  If a client
-holds a lock and then sleeps/hangs for mins/hours/days, no other client will be able to get that
-lock until the client releases it.  This actually seems like a good thing to us, if a lock is
-acquired, it should be kept until released.
-
-But what about accidental failures to release the lock?
-
-1. If a developer uses `lock.aquire()` but doesn't later call `lock.release()`?
-2. If code inside a lock accidentally throws an exception (and .release() is not called)?
-3. If the process running the application crashes or the process' server dies?
-
-Plock helps #1 and #2 above in a few different ways:
-
-* Locks work as context managers.  Use them as much as possible to guarantee a lock is released.
-* Locks release their lock when garbage collected.
-* Plock uses a dedicated SQLAlchemy connection pool.  When a connection is returned to the pool,
-  either because a connection `.close()` is called or due to garbage collection of the connection,
-  Plock issues a `pg_advisory_unlock_all()`.  It should therefore be impossible for an idle
-  connection in the pool to ever still be holding a lock.
-
-Regarding #3 above, `pg_advisory_unlock_all()` is implicitly invoked by PostgreSQL whenever a
-connection (a.k.a session) ends, even if the client disconnects ungracefully.  So if a process
-crashes or otherwise disappears, PostgreSQL should notice and remove all locks held by that
-connection/session.
-
-The possibility could exist that PostgreSQL does not detect a connection has closed and keeps
-a lock open indefinitely.  However, in manual testing using `scripts/hang.py` no way was found
-to end the Python process without PostgreSQL detecting it.
-
 
 Usage
 ========
@@ -64,7 +31,7 @@ Usage
 .. code:: python
 
     # Think of the Locker instance as a Lock factory.
-    locker = plocks.Locker('my-app-name', 'postgresql://user:pass@server/dbname')
+    locker = pals.Locker('my-app-name', 'postgresql://user:pass@server/dbname')
 
     lock1 = locker.lock('my-lock')
     lock2 = locker.lock('my-lock')
@@ -113,7 +80,7 @@ Usage
         with lock1:
             # We won't get here because lock2 aquires the lock just above
             pass
-    except plocks.AquireFailure:
+    except pals.AquireFailure:
         pass
 
 
@@ -126,7 +93,7 @@ Setup Database Connection
 We have provided a docker-compose file, but you don't have to use it::
 
     $ docker-compose up -d
-    $ export PLOCKS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
+    $ export PALS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
 
 You can also put the environment variable in a .env file and pipenv will pick it up.
 
@@ -141,7 +108,41 @@ Or, manually::
 
     $ pipenv install --dev
     $ pipenv shell
-    $ pytest plocks/tests.py
+    $ pytest pals/tests.py
+
+
+Lock Releasing & Expiration
+---------------------------
+
+Unlike locking systems built on cache services like Memcache and Redis, whose keys can be expired
+by the service, there is no faculty for expiring an advisory lock in PostgreSQL.  If a client
+holds a lock and then sleeps/hangs for mins/hours/days, no other client will be able to get that
+lock until the client releases it.  This actually seems like a good thing to us, if a lock is
+acquired, it should be kept until released.
+
+But what about accidental failures to release the lock?
+
+1. If a developer uses `lock.aquire()` but doesn't later call `lock.release()`?
+2. If code inside a lock accidentally throws an exception (and .release() is not called)?
+3. If the process running the application crashes or the process' server dies?
+
+PALs helps #1 and #2 above in a few different ways:
+
+* Locks work as context managers.  Use them as much as possible to guarantee a lock is released.
+* Locks release their lock when garbage collected.
+* PALs uses a dedicated SQLAlchemy connection pool.  When a connection is returned to the pool,
+  either because a connection `.close()` is called or due to garbage collection of the connection,
+  PALs issues a `pg_advisory_unlock_all()`.  It should therefore be impossible for an idle
+  connection in the pool to ever still be holding a lock.
+
+Regarding #3 above, `pg_advisory_unlock_all()` is implicitly invoked by PostgreSQL whenever a
+connection (a.k.a session) ends, even if the client disconnects ungracefully.  So if a process
+crashes or otherwise disappears, PostgreSQL should notice and remove all locks held by that
+connection/session.
+
+The possibility could exist that PostgreSQL does not detect a connection has closed and keeps
+a lock open indefinitely.  However, in manual testing using `scripts/hang.py` no way was found
+to end the Python process without PostgreSQL detecting it.
 
 
 See Also

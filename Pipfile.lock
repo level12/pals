@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f401abf1274d262c29618a5df32db98a303bb02fb7be42cc2de9912a2f578e10"
+            "sha256": "146bc21e5ed38789a360af842af619ba97abcf6359193c9f2e096d39047c21d3"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -89,7 +89,7 @@
             "markers": "python_version > '2.7'",
             "version": "==6.0.0"
         },
-        "plocks": {
+        "pals": {
             "editable": true,
             "path": "."
         },

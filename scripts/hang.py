@@ -24,9 +24,9 @@
 """
 import os
 
-import plocks
+import pals
 
-locker = plocks.Locker('plocker-hang', 'postgresql://postgres:password@localhost:54321/vacbal')
+locker = pals.Locker('pals-hang', 'postgresql://postgres:password@localhost:54321/postgres')
 
 lock = locker.lock('hang')
 lock.aquire()

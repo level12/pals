@@ -5,11 +5,11 @@ import string
 
 import pytest
 
-import plocks
+import pals
 
 # Default URL will work for CI tests
-db_url = os.environ.get('PLOCKS_DB_URL', 'postgresql://postgres:password@localhost/postgres')
-locker = plocks.Locker('plocker-tests', db_url)
+db_url = os.environ.get('PALS_DB_URL', 'postgresql://postgres:password@localhost/postgres')
+locker = pals.Locker('pals-tests', db_url)
 
 
 def random_str(length):
@@ -103,7 +103,7 @@ class TestLock:
         lock2 = locker.lock('test_it', blocking=False)
         assert lock2.aquire() is True
 
-        with pytest.raises(plocks.AquireFailure):
+        with pytest.raises(pals.AquireFailure):
             with locker.lock('test_it'):
                 pass  # we should never hit this line
 

@@ -11,7 +11,7 @@ restview = "*"
 
 [packages]
 pytest = "*"
-plocks = {editable = true, path = "."}
+pals = {editable = true, path = "."}
 pytest-cov = "*"
 sqlalchemy = "*"
 check-manifest = "*"
