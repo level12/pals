@@ -6,6 +6,7 @@ verify_ssl = true
 [dev-packages]
 restview = "*"
 "flake8" = "*"
+twine = "*"
 
 [requires]
 

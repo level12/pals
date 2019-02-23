@@ -2,3 +2,4 @@ include *.rst *.ini *.txt *.cfg .coveragerc Pipfile* *.yaml
 include .ci/*
 include .circleci/*
 recursive-include scripts *.py
+recursive-include pals *.py
