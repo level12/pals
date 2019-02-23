@@ -1,3 +1,4 @@
+import datetime as dt
 import gc
 import os
 import random
@@ -32,37 +33,58 @@ class TestLocker:
         assert len(set(nums)) == 5000
 
 
+def duration(started_at):
+    duration = dt.datetime.now() - started_at
+    secs = duration.total_seconds()
+    # in milliseconds
+    return secs * 1000
+
+
 class TestLock:
 
     def test_same_lock_fails_aquire(self):
         lock1 = locker.lock('test_it')
         lock2 = locker.lock('test_it')
 
-        assert lock1.aquire() is True
+        try:
+            assert lock1.aquire() is True
 
-        # Non blocking version should fail immediately.  Use `is` test to make sure we get the
-        # correct return value.
-        assert lock2.aquire(blocking=False) is False
+            # Non blocking version should fail immediately.  Use `is` test to make sure we get the
+            # correct return value.
+            assert lock2.aquire(blocking=False) is False
 
-        # Blocking version should fail after a couple loops
-        aquired, retries = lock2.aquire(retry_delay=100, retry_timeout=300, return_retries=True)
-        assert aquired is False
-        assert retries in (2, 3)
+            # Blocking version should fail after a short time
+            start = dt.datetime.now()
+            aquired = lock2.aquire(aquire_timeout=300)
+            waited_ms = duration(start)
+
+            assert aquired is False
+            assert waited_ms >= 300 and waited_ms < 350
+        finally:
+            lock1.release()
 
     def test_different_lock_name_both_aquire(self):
         lock1 = locker.lock('test_it')
         lock2 = locker.lock('test_it2')
 
-        assert lock1.aquire() is True
-        assert lock2.aquire() is True
+        try:
+            assert lock1.aquire() is True
+            assert lock2.aquire() is True
+        finally:
+            lock1.release()
+            lock2.release()
 
     def test_lock_after_release_aquires(self):
         lock1 = locker.lock('test_it')
         lock2 = locker.lock('test_it')
 
-        assert lock1.aquire() is True
-        assert lock1.release() is True
-        assert lock2.aquire() is True
+        try:
+            assert lock1.aquire() is True
+            assert lock1.release() is True
+            assert lock2.aquire() is True
+        finally:
+            lock1.release()
+            lock2.release()
 
     def test_class_params_used(self):
         """
@@ -71,28 +93,36 @@ class TestLock:
         """
         lock1 = locker.lock('test_it')
         lock2 = locker.lock('test_it', blocking=False)
-        lock3 = locker.lock('test_it', retry_delay=100, retry_timeout=300)
+        lock3 = locker.lock('test_it', aquire_timeout=300)
 
-        assert lock1.aquire() is True
+        try:
+            assert lock1.aquire() is True
 
-        # Make sure the blocking param applies
-        aquired, retries = lock2.aquire(return_retries=True)
-        assert aquired is False
-        assert retries == 0
+            # Make sure the blocking param applies
+            aquired = lock2.aquire()
+            assert aquired is False
 
-        # Make sure the retry params apply
-        aquired, retries = lock3.aquire(return_retries=True)
-        assert aquired is False
-        assert retries in (2, 3)
+            # Make sure the retry params apply
+            start = dt.datetime.now()
+            aquired = lock3.aquire()
+            waited_ms = duration(start)
+            assert aquired is False
+            assert waited_ms >= 300 and waited_ms < 350
+        finally:
+            lock1.release()
+            lock2.release()
+            lock3.release()
 
     def test_context_manager(self):
         lock2 = locker.lock('test_it', blocking=False)
+        try:
+            with locker.lock('test_it'):
+                assert lock2.aquire() is False
 
-        with locker.lock('test_it'):
-            assert lock2.aquire() is False
-
-        # Outside the lock should have been released and we can get it now
-        assert lock2.aquire()
+            # Outside the lock should have been released and we can get it now
+            assert lock2.aquire()
+        finally:
+            lock2.release()
 
     def test_context_manager_failure_to_aquire(self):
         """

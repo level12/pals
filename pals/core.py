@@ -1,10 +1,11 @@
-import datetime as dt
 import hashlib
+import logging
 import struct
-import time
 
 import sqlalchemy as sa
 
+
+log = logging.getLogger(__name__)
 
 __all__ = [
     'Locker',
@@ -66,48 +67,50 @@ class Locker:
 
 
 class Lock:
-    def __init__(self, conn, lock_num, blocking=True, retry_delay=200, retry_timeout=1000):
-        self.conn = conn
+    def __init__(self, engine, lock_num, blocking=True, aquire_timeout=1000):
+        self.engine = engine
+        self.conn = None
         self.lock_num = lock_num
         self.blocking = blocking
-        self.retry_delay = retry_delay
-        self.retry_timeout = retry_timeout
+        self.aquire_timeout = aquire_timeout
 
-    def aquire(self, blocking=None, retry_delay=None, retry_timeout=None, return_retries=False):
+    def aquire(self, blocking=None, aquire_timeout=None):
         blocking = blocking if blocking is not None else self.blocking
-        retry_delay = retry_delay or self.retry_delay
-        retry_timeout = retry_timeout or self.retry_timeout
+        aquire_timeout = aquire_timeout or self.aquire_timeout
 
-        sql = sa.text('select pg_try_advisory_lock(:lock_num)')
+        if self.conn is None:
+            self.conn = self.engine.connect()
 
-        started_at = dt.datetime.utcnow()
-        loop_count = 0
-        while True:
-            result = self.conn.execute(sql, lock_num=self.lock_num)
-            aquired_lock = result.scalar()
+        if blocking:
+            timeout_sql = sa.text('set lock_timeout = :timeout')
+            self.conn.execute(timeout_sql, timeout=aquire_timeout)
 
-            if aquired_lock or not blocking:
-                # return retries is mostly intended for easier testing
-                if return_retries:
-                    return aquired_lock, loop_count
-                return aquired_lock
+            lock_sql = sa.text('select pg_advisory_lock(:lock_num)')
+        else:
+            lock_sql = sa.text('select pg_try_advisory_lock(:lock_num)')
 
-            elapsed = dt.datetime.utcnow() - started_at
-            elapsed_ms = elapsed.total_seconds() * 1000
-            if elapsed_ms >= retry_timeout:
-                # return retries is mostly intended for easier testing
-                if return_retries:
-                    return False, loop_count
-                return False
-
-            loop_count += 1
-
-            # Sleep for the desired delay
-            time.sleep(retry_delay / 1000.0)
+        try:
+            result = self.conn.execute(lock_sql, lock_num=self.lock_num)
+            retval = result.scalar()
+            log.debug('Lock result was: %r', retval)
+            # At least on PG 10.6, pg_advisory_lock() returns an empty string
+            # when it aquires the lock.  pg_try_advisory_lock() returns True.
+            # If pg_try_advisory_lock() fails, it returns False.
+            return retval in (True, '')
+        except sa.exc.OperationalError as e:
+            if 'lock timeout' not in str(e):
+                raise
+            log.debug('Lock aquire failed due to timeout')
+            return False
 
     def release(self):
+        if self.conn is None:
+            return False
+
         sql = sa.text('select pg_advisory_unlock(:lock_num)')
         result = self.conn.execute(sql, lock_num=self.lock_num)
+        self.conn.close()
+        self.conn = None
         return result.scalar()
 
     def __enter__(self):
