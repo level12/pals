@@ -9,11 +9,11 @@ log = logging.getLogger(__name__)
 
 __all__ = [
     'Locker',
-    'AquireFailure',
+    'AcquireFailure',
 ]
 
 
-class AquireFailure(Exception):
+class AcquireFailure(Exception):
     pass
 
 
@@ -38,7 +38,7 @@ class Locker:
             with dbapi_connection.cursor() as cur:
                 # If the connection is "closed" we want all locks to be cleaned up since this
                 # connection is going to be recycled.  This step is to take extra care that we don't
-                # accidentally leave a lock aquired.
+                # accidentally leave a lock acquired.
                 cur.execute('select pg_advisory_unlock_all()')
 
     def _lock_name(self, name):
@@ -67,23 +67,23 @@ class Locker:
 
 
 class Lock:
-    def __init__(self, engine, lock_num, blocking=True, aquire_timeout=1000):
+    def __init__(self, engine, lock_num, blocking=True, acquire_timeout=1000):
         self.engine = engine
         self.conn = None
         self.lock_num = lock_num
         self.blocking = blocking
-        self.aquire_timeout = aquire_timeout
+        self.acquire_timeout = acquire_timeout
 
-    def aquire(self, blocking=None, aquire_timeout=None):
+    def acquire(self, blocking=None, acquire_timeout=None):
         blocking = blocking if blocking is not None else self.blocking
-        aquire_timeout = aquire_timeout or self.aquire_timeout
+        acquire_timeout = acquire_timeout or self.acquire_timeout
 
         if self.conn is None:
             self.conn = self.engine.connect()
 
         if blocking:
             timeout_sql = sa.text('set lock_timeout = :timeout')
-            self.conn.execute(timeout_sql, timeout=aquire_timeout)
+            self.conn.execute(timeout_sql, timeout=acquire_timeout)
 
             lock_sql = sa.text('select pg_advisory_lock(:lock_num)')
         else:
@@ -94,13 +94,13 @@ class Lock:
             retval = result.scalar()
             log.debug('Lock result was: %r', retval)
             # At least on PG 10.6, pg_advisory_lock() returns an empty string
-            # when it aquires the lock.  pg_try_advisory_lock() returns True.
+            # when it acquires the lock.  pg_try_advisory_lock() returns True.
             # If pg_try_advisory_lock() fails, it returns False.
             return retval in (True, '')
         except sa.exc.OperationalError as e:
             if 'lock timeout' not in str(e):
                 raise
-            log.debug('Lock aquire failed due to timeout')
+            log.debug('Lock acquire failed due to timeout')
             return False
 
     def release(self):
@@ -114,8 +114,8 @@ class Lock:
         return result.scalar()
 
     def __enter__(self):
-        if not self.aquire():
-            raise AquireFailure
+        if not self.acquire():
+            raise AcquireFailure
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -123,7 +123,7 @@ class Lock:
 
     def __del__(self):
         # Do everything we can to release resources and the connection to avoid accidently holding
-        # a lock indefinetely if .release() is forgotten.
+        # a lock indefinitely if .release() is forgotten.
         try:
             self.release()
         except Exception:

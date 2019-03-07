@@ -36,19 +36,19 @@ Usage
     lock1 = locker.lock('my-lock')
     lock2 = locker.lock('my-lock')
 
-    # The first aquire works
-    assert lock1.aquire() is True
+    # The first acquire works
+    assert lock1.acquire() is True
 
     # Non blocking version should fail immediately
-    assert lock2.aquire(blocking=False) is False
+    assert lock2.acquire(blocking=False) is False
 
     # Blocking version will retry and eventually fail
-    aquired, retries = lock2.aquire(return_retries=True)
-    assert aquired is False
+    acquired, retries = lock2.acquire(return_retries=True)
+    assert acquired is False
     assert retries > 4
 
     # You can set the retry parameters yourself if you don't like our defaults.
-    lock2.aquire(retry_delay=100, retry_timeout=300)
+    lock2.acquire(retry_delay=100, retry_timeout=300)
 
     # They can also be set on the lock instance
     lock3 = locker.lock('my-lock', retry_delay=100, retry_timeout=300)
@@ -57,7 +57,7 @@ Usage
     lock1.release()
 
     # Recommended usage pattern:
-    if not lock1.aquire():
+    if not lock1.acquire():
         # Remember to check to make sure you got your lock
         return
     try:
@@ -67,20 +67,20 @@ Usage
 
     # But more recommended and easier is to use the lock as a context manager:
     with lock1:
-        assert lock2.aquire() is False
+        assert lock2.acquire() is False
 
     # Outside the context manager the lock should have been released and we can get it now
-    assert lock2.aquire()
+    assert lock2.acquire()
 
-    # The context manager version will throw an exception if it fails to aquire the lock.  This
+    # The context manager version will throw an exception if it fails to acquire the lock.  This
     # pattern was chosen because it feels symantically wrong to have to check to see if the lock
-    # was actually aquired inside the context manager.  If the code inside is ran, the lock was
-    # aquired.
+    # was actually acquired inside the context manager.  If the code inside is ran, the lock was
+    # acquired.
     try:
         with lock1:
-            # We won't get here because lock2 aquires the lock just above
+            # We won't get here because lock2 acquires the lock just above
             pass
-    except pals.AquireFailure:
+    except pals.AcquireFailure:
         pass
 
 
@@ -122,7 +122,7 @@ acquired, it should be kept until released.
 
 But what about accidental failures to release the lock?
 
-1. If a developer uses `lock.aquire()` but doesn't later call `lock.release()`?
+1. If a developer uses `lock.acquire()` but doesn't later call `lock.release()`?
 2. If code inside a lock accidentally throws an exception (and .release() is not called)?
 3. If the process running the application crashes or the process' server dies?
 

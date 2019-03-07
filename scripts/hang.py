@@ -29,6 +29,6 @@ import pals
 locker = pals.Locker('pals-hang', 'postgresql://postgres:password@localhost:54321/postgres')
 
 lock = locker.lock('hang')
-lock.aquire()
+lock.acquire()
 print('My pid is: ', os.getpid())
-input('Lock aquired, press any key to exit: ')
+input('Lock acquired, press any key to exit: ')
