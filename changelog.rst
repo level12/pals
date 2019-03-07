@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.2.0 released 2019-03-07
+-------------------------
+
+- Fix misspelling of "acquire" (737763f_)
+
+.. _737763f: https://github.com/level12/pals/commit/737763f
+
+
 0.1.0 released 2019-02-22
 -------------------------
 
