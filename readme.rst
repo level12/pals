@@ -56,7 +56,7 @@ Usage
     # Release the lock
     lock1.release()
 
-    # Recommended usage pattern:
+    # Basic usage pattern. 
     if not lock1.acquire():
         # Remember to check to make sure you got your lock
         return
@@ -65,20 +65,13 @@ Usage
     finally:
         lock1.release()
 
-    # But more recommended and easier is to use the lock as a context manager:
-    with lock1:
-        assert lock2.acquire() is False
-
-    # Outside the context manager the lock should have been released and we can get it now
+    # The recommended usage is to use Python's context manager. If the context manager fails acquire a lock it will throw an exception, pals.AcquireFailure. 
+    # Otherwise if the above exception is not thrown the code within the context manager block has successfully acquired the lock. 
+    # See: https://alysivji.github.io/managing-resources-with-context-managers-pythonic.html for good information on the semantics of using context managers in python, catching exceptions, cleanup on failures, etc. 
     assert lock2.acquire()
-
-    # The context manager version will throw an exception if it fails to acquire the lock.  This
-    # pattern was chosen because it feels symantically wrong to have to check to see if the lock
-    # was actually acquired inside the context manager.  If the code inside is ran, the lock was
-    # acquired.
     try:
         with lock1:
-            # We won't get here because lock2 acquires the lock just above
+            # We won't get here because lock2 acquires the lock 'my-lock' just above
             pass
     except pals.AcquireFailure:
         pass
