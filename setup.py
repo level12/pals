@@ -28,7 +28,7 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
     ],
-    license='BSD',
+    license='BSD-3-Clause',
     packages=find_packages(),
     zip_safe=False,
     include_package_data=True,
