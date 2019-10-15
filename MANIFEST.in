@@ -3,3 +3,6 @@ include .ci/*
 include .circleci/*
 recursive-include scripts *.py
 recursive-include pals *.py
+recursive-include requirements *.in
+recursive-include requirements *.txt
+recursive-include requirements Makefile

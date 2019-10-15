@@ -15,8 +15,8 @@ jobs:
                 command: ls -al
 
             - run:
-                name: install tox and upgrade pip
-                command: python3.5 -m pip install -U pip tox pipenv
+                name: install latest version of tox
+                command: python3.5 -m pip install --upgrade --force-reinstall --quiet tox
 
             - run:
                 name: version checks

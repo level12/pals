@@ -1,0 +1,12 @@
+# These are all the requirements need to run and test the application.
+
+pytest
+pytest-cov
+sqlalchemy
+check-manifest
+docutils
+psycopg2-binary
+pathlib2
+flake8
+# specify version to maintain python 3.5 compatibility
+twine==1.15.0
