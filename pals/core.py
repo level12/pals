@@ -67,7 +67,7 @@ class Locker:
 
 
 class Lock:
-    def __init__(self, engine, lock_num, blocking=True, acquire_timeout=1000):
+    def __init__(self, engine, lock_num, blocking=True, acquire_timeout=30000):
         self.engine = engine
         self.conn = None
         self.lock_num = lock_num
