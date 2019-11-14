@@ -30,6 +30,9 @@ Usage
 
 .. code:: python
 
+    import datetime as dt
+    import pals
+
     # Think of the Locker instance as a Lock factory.
     locker = pals.Locker('my-app-name', 'postgresql://user:pass@server/dbname')
 
@@ -42,38 +45,33 @@ Usage
     # Non blocking version should fail immediately
     assert lock2.acquire(blocking=False) is False
 
-    # Blocking version will retry and eventually fail
-    acquired, retries = lock2.acquire(return_retries=True)
+    # Blocking version should fail after a short time
+    start = dt.datetime.now()
+    acquired = lock2.acquire(acquire_timeout=300)
+    waited_ms = duration(start)
+
     assert acquired is False
-    assert retries > 4
-
-    # You can set the retry parameters yourself if you don't like our defaults.
-    lock2.acquire(retry_delay=100, retry_timeout=300)
-
-    # They can also be set on the lock instance
-    lock3 = locker.lock('my-lock', retry_delay=100, retry_timeout=300)
+    assert waited_ms >= 300 and waited_ms < 350
 
     # Release the lock
     lock1.release()
 
-    # Basic usage pattern. 
-    if not lock1.acquire():
-        # Remember to check to make sure you got your lock
+    # Non-blocking usage pattern
+    if not lock1.acquire(blocking=False):
+        # Aquire returned False, indicating we did not get the lock.
         return
     try:
-        # do my work here
+        # do your work here
     finally:
         lock1.release()
 
-    # The recommended usage is to use Python's context manager. If the context manager fails acquire a lock it will throw an exception, pals.AcquireFailure. 
-    # Otherwise if the above exception is not thrown the code within the context manager block has successfully acquired the lock. 
-    # See: https://alysivji.github.io/managing-resources-with-context-managers-pythonic.html for good information on the semantics of using context managers in python, catching exceptions, cleanup on failures, etc. 
-    assert lock2.acquire()
+    # If you want to block, you can use a context manager:
     try:
         with lock1:
-            # We won't get here because lock2 acquires the lock 'my-lock' just above
+            # Do your work here
             pass
     except pals.AcquireFailure:
+        # This indicates the aquire_timeout was reached before the lock could be aquired.
         pass
 
 
@@ -83,12 +81,10 @@ Running Tests Locally
 Setup Database Connection
 -------------------------
 
-We have provided a docker-compose file, but you don't have to use it::
+We have provided a docker-compose file to ease running the tests:
 
     $ docker-compose up -d
     $ export PALS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
-
-You can also put the environment variable in a .env file and pipenv will pick it up.
 
 Run the Tests
 -------------
@@ -97,11 +93,11 @@ With tox::
 
     $ tox
 
-Or, manually::
+Or, manually (assuming an activated virtualenv)::
 
-    $ pipenv install --dev
-    $ pipenv shell
-    $ pytest pals/tests.py
+    $ pip install -r requirements/dev.txt
+    $ pip install -e .
+    $ pytest pals/tests/
 
 
 Lock Releasing & Expiration
