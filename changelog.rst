@@ -1,6 +1,41 @@
 Changelog
 =========
 
+0.3.0 released 2019-11-13
+-------------------------
+
+Enhancements
+~~~~~~~~~~~~
+
+- Add acquire timeout and blocking defaults at Locker level (681c3ba_)
+- Adjust default lock timeout from 1s to 30s (5a0963b_)
+
+Project Cleanup
+~~~~~~~~~~~~~~~
+
+- adjust flake8 ignore and other tox project warning (ee123fc_)
+- fix comment in test (0d8eb98_)
+- Additional readme updates (0786766_)
+- update locked dependencies (f5743a6_)
+- Remove Python 3.5 from CI (b63c71a_)
+- Cleaned up the readme code example a bit and added more references (dabb497_)
+- Update setup.py to use SPDX license identifier (b811a99_)
+- remove Pipefiles (0637f39_)
+- move to using piptools for dependency management (af2e91f_)
+
+.. _ee123fc: https://github.com/level12/pals/commit/ee123fc
+.. _681c3ba: https://github.com/level12/pals/commit/681c3ba
+.. _5a0963b: https://github.com/level12/pals/commit/5a0963b
+.. _0d8eb98: https://github.com/level12/pals/commit/0d8eb98
+.. _0786766: https://github.com/level12/pals/commit/0786766
+.. _f5743a6: https://github.com/level12/pals/commit/f5743a6
+.. _b63c71a: https://github.com/level12/pals/commit/b63c71a
+.. _dabb497: https://github.com/level12/pals/commit/dabb497
+.. _b811a99: https://github.com/level12/pals/commit/b811a99
+.. _0637f39: https://github.com/level12/pals/commit/0637f39
+.. _af2e91f: https://github.com/level12/pals/commit/af2e91f
+
+
 0.2.0 released 2019-03-07
 -------------------------
 
