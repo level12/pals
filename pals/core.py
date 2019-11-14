@@ -24,9 +24,16 @@ class Locker:
         It holds the name of the application (so lock names are namespaced and less likely to
         collide) and the SQLAlchemy engine instance (and therefore the connection pool).
     """
-    def __init__(self, app_name, *args, **kwargs):
-        self.engine = sa.create_engine(*args, **kwargs)
+    def __init__(self, app_name, db_url=None, blocking_default=True, acquire_timeout_default=30000,
+            create_engine_callable=None):
         self.app_name = app_name
+        self.blocking_default = blocking_default
+        self.acquire_timeout_default = acquire_timeout_default
+
+        if create_engine_callable:
+            self.engine = create_engine_callable()
+        else:
+            self.engine = sa.create_engine(db_url)
 
         @sa.event.listens_for(self.engine, 'checkin')
         def on_conn_checkin(dbapi_connection, connection_record):
@@ -63,11 +70,13 @@ class Locker:
 
     def lock(self, name, **kwargs):
         lock_num = self._lock_num(name)
+        kwargs.setdefault('blocking', self.blocking_default)
+        kwargs.setdefault('acquire_timeout', self.acquire_timeout_default)
         return Lock(self.engine.connect(), lock_num, **kwargs)
 
 
 class Lock:
-    def __init__(self, engine, lock_num, blocking=True, acquire_timeout=30000):
+    def __init__(self, engine, lock_num, blocking=None, acquire_timeout=None):
         self.engine = engine
         self.conn = None
         self.lock_num = lock_num

@@ -10,7 +10,6 @@ import pals
 
 # Default URL will work for CI tests
 db_url = os.environ.get('PALS_DB_URL', 'postgresql://postgres:password@localhost/postgres')
-locker = pals.Locker('pals-tests', db_url)
 
 
 def random_str(length):
@@ -27,10 +26,22 @@ class TestLocker:
             this seems like an ok way to test that the method we are using to convert our strings
             into numbers is unlikely to have accidental collisions.
         """
+        locker = pals.Locker('TestLocker', db_url)
+
         names = [random_str(max(6, x % 25)) for x in range(5000)]
         assert len(set(names)) == 5000
         nums = [locker._lock_num(name) for name in names]
         assert len(set(nums)) == 5000
+
+    def test_locker_defaults(self):
+        lock = pals.Locker('foo', db_url).lock('a')
+        assert lock.blocking is True
+        assert lock.acquire_timeout == 30000
+
+        lock = pals.Locker('bar', db_url, blocking_default=False, acquire_timeout_default=1000) \
+            .lock('a')
+        assert lock.blocking is False
+        assert lock.acquire_timeout == 1000
 
 
 def duration(started_at):
@@ -41,10 +52,11 @@ def duration(started_at):
 
 
 class TestLock:
+    locker = pals.Locker('TestLock', db_url, acquire_timeout_default=1000)
 
     def test_same_lock_fails_acquire(self):
-        lock1 = locker.lock('test_it')
-        lock2 = locker.lock('test_it')
+        lock1 = self.locker.lock('test_it')
+        lock2 = self.locker.lock('test_it')
 
         try:
             assert lock1.acquire() is True
@@ -64,8 +76,8 @@ class TestLock:
             lock1.release()
 
     def test_different_lock_name_both_acquire(self):
-        lock1 = locker.lock('test_it')
-        lock2 = locker.lock('test_it2')
+        lock1 = self.locker.lock('test_it')
+        lock2 = self.locker.lock('test_it2')
 
         try:
             assert lock1.acquire() is True
@@ -75,8 +87,8 @@ class TestLock:
             lock2.release()
 
     def test_lock_after_release_acquires(self):
-        lock1 = locker.lock('test_it')
-        lock2 = locker.lock('test_it')
+        lock1 = self.locker.lock('test_it')
+        lock2 = self.locker.lock('test_it')
 
         try:
             assert lock1.acquire() is True
@@ -91,9 +103,9 @@ class TestLock:
             If blocking & timeout params are set on the class, make sure they are passed through and
             used correctly.
         """
-        lock1 = locker.lock('test_it')
-        lock2 = locker.lock('test_it', blocking=False)
-        lock3 = locker.lock('test_it', acquire_timeout=300)
+        lock1 = self.locker.lock('test_it')
+        lock2 = self.locker.lock('test_it', blocking=False)
+        lock3 = self.locker.lock('test_it', acquire_timeout=300)
 
         try:
             assert lock1.acquire() is True
@@ -114,9 +126,9 @@ class TestLock:
             lock3.release()
 
     def test_context_manager(self):
-        lock2 = locker.lock('test_it', blocking=False)
+        lock2 = self.locker.lock('test_it', blocking=False)
         try:
-            with locker.lock('test_it'):
+            with self.locker.lock('test_it'):
                 assert lock2.acquire() is False
 
             # Outside the lock should have been released and we can get it now
@@ -130,17 +142,17 @@ class TestLock:
             a developer doesn't have to remember to explicilty check the return value of acquire
             when using a with statement.
         """
-        lock2 = locker.lock('test_it', blocking=False)
+        lock2 = self.locker.lock('test_it', blocking=False)
         assert lock2.acquire() is True
 
         with pytest.raises(pals.AcquireFailure):
-            with locker.lock('test_it'):
+            with self.locker.lock('test_it'):
                 pass  # we should never hit this line
 
     def test_gc_lock_release(self):
-        lock1 = locker.lock('test_it')
+        lock1 = self.locker.lock('test_it')
         lock1.acquire()
         del lock1
         gc.collect()
 
-        assert locker.lock('test_it', blocking=False).acquire()
+        assert self.locker.lock('test_it', blocking=False).acquire()
