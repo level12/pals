@@ -88,7 +88,7 @@ class TestLock:
 
     def test_class_params_used(self):
         """
-            If blocking & retry params are set on the class, make sure they are passed through and
+            If blocking & timeout params are set on the class, make sure they are passed through and
             used correctly.
         """
         lock1 = locker.lock('test_it')
