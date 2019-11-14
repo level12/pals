@@ -3,7 +3,7 @@ jobs:
     build:
         docker:
             - image: level12/python-test-multi
-            - image: postgres:9.6
+            - image: postgres:11
               environment:
                   POSTGRES_USER: postgres
                   POSTGRES_PASSWORD: password
@@ -16,7 +16,7 @@ jobs:
 
             - run:
                 name: install latest version of tox
-                command: python3.5 -m pip install --upgrade --force-reinstall --quiet tox
+                command: python3.7 -m pip install --upgrade --force-reinstall --quiet tox
 
             - run:
                 name: version checks
