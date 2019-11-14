@@ -28,6 +28,12 @@ unnecessary.
 Usage
 ========
 
+Install with::
+
+    pip install PALs
+
+Then usage is as follows:
+
 .. code:: python
 
     import datetime as dt
@@ -74,6 +80,12 @@ Usage
         # This indicates the aquire_timeout was reached before the lock could be aquired.
         pass
 
+Docs
+========
+
+Just this readme, the code, and tests.  It a small project, should be easy to understand.
+
+Feel free to open an issue with questions.
 
 Running Tests Locally
 =====================
@@ -81,10 +93,11 @@ Running Tests Locally
 Setup Database Connection
 -------------------------
 
-We have provided a docker-compose file to ease running the tests:
+We have provided a docker-compose file to ease running the tests::
 
     $ docker-compose up -d
     $ export PALS_DB_URL=postgresql://postgres:password@localhost:54321/postgres
+
 
 Run the Tests
 -------------
