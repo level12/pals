@@ -82,8 +82,7 @@ class Lock:
         self.lock_num = lock_num
         self.blocking = blocking
         self.acquire_timeout = acquire_timeout
-        self.shared = shared
-        self.shared_suffix = '_shared' if self.shared else ''
+        self.shared_suffix = '_shared' if shared else ''
 
     def acquire(self, blocking=None, acquire_timeout=None):
         blocking = blocking if blocking is not None else self.blocking
