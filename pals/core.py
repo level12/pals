@@ -83,6 +83,7 @@ class Lock:
         self.blocking = blocking
         self.acquire_timeout = acquire_timeout
         self.shared = shared
+        self.shared_suffix = '_shared' if self.shared else ''
 
     def acquire(self, blocking=None, acquire_timeout=None):
         blocking = blocking if blocking is not None else self.blocking
@@ -91,15 +92,13 @@ class Lock:
         if self.conn is None:
             self.conn = self.engine.connect()
 
-        shared_suffix = '_shared' if self.shared else ''
-
         if blocking:
             timeout_sql = sa.text('set lock_timeout = :timeout')
             self.conn.execute(timeout_sql, timeout=acquire_timeout)
 
-            lock_sql = sa.text(f'select pg_advisory_lock{shared_suffix}(:lock_num)')
+            lock_sql = sa.text(f'select pg_advisory_lock{self.shared_suffix}(:lock_num)')
         else:
-            lock_sql = sa.text(f'select pg_try_advisory_lock{shared_suffix}(:lock_num)')
+            lock_sql = sa.text(f'select pg_try_advisory_lock{self.shared_suffix}(:lock_num)')
 
         try:
             result = self.conn.execute(lock_sql, lock_num=self.lock_num)
@@ -119,8 +118,7 @@ class Lock:
         if self.conn is None:
             return False
 
-        shared_suffix = '_shared' if self.shared else ''
-        sql = sa.text(f'select pg_advisory_unlock{shared_suffix}(:lock_num)')
+        sql = sa.text(f'select pg_advisory_unlock{self.shared_suffix}(:lock_num)')
         result = self.conn.execute(sql, lock_num=self.lock_num)
         self.conn.close()
         self.conn = None
