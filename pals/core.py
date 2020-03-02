@@ -131,14 +131,14 @@ class Lock:
         self.release()
 
     def __del__(self):
-        # Do everything we can to release resources and the connection to avoid accidently holding
+        # Do everything we can to release resources and the connection to avoid accidentally holding
         # a lock indefinitely if .release() is forgotten.
         try:
             self.release()
         except Exception:
             # Sometimes this will fail if the connection has gone away before the gc runs.  Since
             # Python is just going to print the exception and we can't do anything about it,
-            # supress the exception to keep erronous noise out of stderr.
+            # suppress the exception to keep erroneous noise out of stderr.
             pass
         try:
             self.conn.close()
