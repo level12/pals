@@ -42,6 +42,12 @@ class Locker:
                 pool.  That should happen when .close() is called on it or when the connection
                 proxy goes out of scope and is garbage collected.
             """
+            if dbapi_connection is None:
+                # This may occur in rare circumstances where the connection is already closed or an
+                # error occurred while connecting to the database. In these cases any held locks
+                # should already be released when the connection terminated.
+                return
+
             with dbapi_connection.cursor() as cur:
                 # If the connection is "closed" we want all locks to be cleaned up since this
                 # connection is going to be recycled.  This step is to take extra care that we don't
