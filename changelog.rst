@@ -1,6 +1,24 @@
 Changelog
 =========
 
+0.3.1 released 2020-09-03
+-------------------------
+
+- readme: update postgresql link (260bf75_)
+- Handle case where a DB connection is returned to the pool which is already closed (5d730c9_)
+- Fix a couple of typos in comments (da2b8af_)
+- readme improvements (4efba90_)
+- CI: fix coverage upload (52daa27_)
+- Fix CI: bump CI python to v3.7 and postgres to v11 (23b3028_)
+
+.. _260bf75: https://github.com/level12/pals/commit/260bf75
+.. _5d730c9: https://github.com/level12/pals/commit/5d730c9
+.. _da2b8af: https://github.com/level12/pals/commit/da2b8af
+.. _4efba90: https://github.com/level12/pals/commit/4efba90
+.. _52daa27: https://github.com/level12/pals/commit/52daa27
+.. _23b3028: https://github.com/level12/pals/commit/23b3028
+
+
 0.3.0 released 2019-11-13
 -------------------------
 
