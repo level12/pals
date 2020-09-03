@@ -22,7 +22,7 @@ Distributed application level locking can be implemented by using Redis, Memcach
 others.  But for those who are already using PostgreSQL, setup & management of another service is
 unnecessary.
 
-.. _PostgreSQL Advisory Locks: https://www.postgresql.org/docs/current/static/explicit-locking.html
+.. _PostgreSQL Advisory Locks: https://www.postgresql.org/docs/current/static/explicit-locking.html#ADVISORY-LOCKS
 
 
 Usage
