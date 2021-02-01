@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.2 released 2021-02-01
+-------------------------
+
+- Support shared advisory locks (thanks to @absalon-james) (ba2fe21_)
+
+.. _ba2fe21: https://github.com/level12/pals/commit/ba2fe21
+
+
 0.3.1 released 2020-09-03
 -------------------------
 
