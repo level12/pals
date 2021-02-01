@@ -125,6 +125,36 @@ class TestLock:
             lock2.release()
             lock3.release()
 
+    def test_shared_lock(self):
+        """
+            Test shared lock.
+        """
+        shared_lock = self.locker.lock('test_it', shared=True)
+        another_shared_lock = self.locker.lock('test_it', shared=True)
+        exclusive_lock = self.locker.lock('test_it', shared=False, blocking=False)
+        try:
+            assert shared_lock.acquire() is True
+            assert another_shared_lock.acquire() is True
+
+            # Assert that an exclusive lock cannot be obtained
+            assert exclusive_lock.acquire() is False
+
+            # Release one of the shared locks.
+            shared_lock.release()
+
+            # Assert that the exclusive still cannot be obtained.
+            assert exclusive_lock.acquire() is False
+
+            # Release the other shared lock.
+            another_shared_lock.release()
+
+            # Assert that the exclusive lock can now be obtained.
+            assert exclusive_lock.acquire() is True
+        finally:
+            shared_lock.release()
+            another_shared_lock.release()
+            exclusive_lock.release()
+
     def test_context_manager(self):
         lock2 = self.locker.lock('test_it', blocking=False)
         try:
