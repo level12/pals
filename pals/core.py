@@ -90,9 +90,27 @@ class Lock:
         self.acquire_timeout = acquire_timeout
         self.shared_suffix = '_shared' if shared else ''
 
-    def acquire(self, blocking=None, acquire_timeout=None):
-        blocking = blocking if blocking is not None else self.blocking
-        acquire_timeout = acquire_timeout or self.acquire_timeout
+    def acquire(self, blocking=None, acquire_timeout=None, timeout=None):
+        """
+        The acquire_timeout parameter is in milliseconds, with 0 indicating no
+        timeout.
+
+        If acquire_timeout is None, the timeout is used instead, following the
+        the semantics of threading.Lock (i.e., seconds with -1 indicating no
+        timeout).
+
+        If neither acquire_timeout or timeout is set, then the Lock or Locker
+        timeout is used (default 30000ms).
+        """
+
+        if blocking is None:
+            blocking = self.blocking
+
+        if acquire_timeout is None:
+            if timeout is not None:
+                acquire_timeout = 0 if timeout<0 else 1+int(timeout*1000)
+            else:
+                acquire_timeout = self.acquire_timeout
 
         if self.conn is None:
             self.conn = self.engine.connect()
