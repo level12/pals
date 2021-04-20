@@ -22,7 +22,7 @@ pathlib2==2.3.5
 pkginfo==1.5.0.1
 pluggy==0.13.0
 psycopg2-binary==2.8.4
-py==1.8.0
+py==1.10.0
 pycodestyle==2.5.0
 pyflakes==2.1.1
 pygments==2.4.2
