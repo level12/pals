@@ -175,8 +175,11 @@ class TestLock:
         lock2 = self.locker.lock('test_it', blocking=False)
         assert lock2.acquire() is True
 
-        with pytest.raises(pals.AcquireFailure):
-            with self.locker.lock('test_it'):
+        with pytest.raises(
+            pals.AcquireFailure,
+            match='Lock acquire failed for "TestLock.test_it". Failed due to timeout.',
+        ):
+            with self.locker.lock("test_it"):
                 pass  # we should never hit this line
 
     def test_gc_lock_release(self):

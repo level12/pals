@@ -14,7 +14,12 @@ __all__ = [
 
 
 class AcquireFailure(Exception):
-    pass
+    def __init__(self, name, message):
+        self.name = name
+        self.message = message
+
+    def __str__(self):
+        return f'Lock acquire failed for "{self.name}". {self.message}.'
 
 
 class Locker:
@@ -76,21 +81,23 @@ class Locker:
 
     def lock(self, name, **kwargs):
         lock_num = self._lock_num(name)
+        name = self._lock_name(name)
         kwargs.setdefault('blocking', self.blocking_default)
         kwargs.setdefault('acquire_timeout', self.acquire_timeout_default)
-        return Lock(self.engine.connect(), lock_num, **kwargs)
+        return Lock(self.engine.connect(), lock_num, name, **kwargs)
 
 
 class Lock:
-    def __init__(self, engine, lock_num, blocking=None, acquire_timeout=None, shared=False):
+    def __init__(self, engine, lock_num, name, blocking=None, acquire_timeout=None, shared=False):
         self.engine = engine
         self.conn = None
         self.lock_num = lock_num
+        self.name = name
         self.blocking = blocking
         self.acquire_timeout = acquire_timeout
         self.shared_suffix = '_shared' if shared else ''
 
-    def acquire(self, blocking=None, acquire_timeout=None):
+    def _acquire(self, blocking=None, acquire_timeout=None) -> bool:
         blocking = blocking if blocking is not None else self.blocking
         acquire_timeout = acquire_timeout or self.acquire_timeout
 
@@ -112,11 +119,20 @@ class Lock:
             # At least on PG 10.6, pg_advisory_lock() returns an empty string
             # when it acquires the lock.  pg_try_advisory_lock() returns True.
             # If pg_try_advisory_lock() fails, it returns False.
-            return retval in (True, '')
+            if retval in (True, ''):
+                return True
+            else:
+                raise AcquireFailure(self.name, 'result was: {retval}')
         except sa.exc.OperationalError as e:
             if 'lock timeout' not in str(e):
                 raise
             log.debug('Lock acquire failed due to timeout')
+            raise AcquireFailure(self.name, 'Failed due to timeout')
+
+    def acquire(self, blocking=None, acquire_timeout=None) -> bool:
+        try:
+            return self._acquire(blocking=blocking, acquire_timeout=acquire_timeout)
+        except AcquireFailure:
             return False
 
     def release(self):
@@ -130,8 +146,7 @@ class Lock:
         return result.scalar()
 
     def __enter__(self):
-        if not self.acquire():
-            raise AcquireFailure
+        self._acquire()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

@@ -11,3 +11,4 @@ build
 .pytest_cache
 .vscode
 .env
+docker-compose.override.yaml
