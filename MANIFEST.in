@@ -1,8 +1,6 @@
 include *.rst *.ini *.txt *.cfg .coveragerc Pipfile* *.yaml
+exclude docker-compose.override.yaml
 include .ci/*
 include .circleci/*
-recursive-include scripts *.py
+recursive-include scripts *.py setup-codecov
 recursive-include pals *.py
-recursive-include requirements *.in
-recursive-include requirements *.txt
-recursive-include requirements Makefile

@@ -1,7 +1,7 @@
 version: '2'
 services:
   pals-pg:
-      image: postgres:10-alpine
+      image: postgres:15-alpine
       container_name: pals-pg
       ports:
         - '127.0.0.1:54321:5432'

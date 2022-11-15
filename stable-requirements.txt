@@ -1,0 +1,13 @@
+attrs==22.1.0
+coverage==6.5.0
+exceptiongroup==1.0.4
+greenlet==2.0.1
+iniconfig==1.1.1
+packaging==21.3
+pluggy==1.0.0
+psycopg2-binary==2.9.5
+pyparsing==3.0.9
+pytest==7.2.0
+pytest-cov==4.0.0
+SQLAlchemy==1.4.44
+tomli==2.0.1
