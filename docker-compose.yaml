@@ -1,7 +1,9 @@
-version: '2'
+version: '2.1'
 services:
   pals-pg:
-      image: postgres:10-alpine
+      image: postgres:15-alpine
       container_name: pals-pg
       ports:
-        - '127.0.0.1:54321:5432'
+        - '${PALS_LIB_POSTGRES_IP:-127.0.0.1}:${PALS_LIB_POSTGRES_PORT:-54321}:5432'
+      environment:
+        POSTGRES_HOST_AUTH_METHOD: trust

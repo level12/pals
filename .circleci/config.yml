@@ -3,7 +3,7 @@ jobs:
     build:
         docker:
             - image: level12/python-test-multi
-            - image: postgres:11
+            - image: postgres:15
               environment:
                   POSTGRES_USER: postgres
                   POSTGRES_PASSWORD: password
@@ -35,4 +35,4 @@ jobs:
 
             - run:
                 name: push code coverage
-                command: bash <(curl -s https://codecov.io/bash) -X coveragepy -t bef3273d-1997-4764-9c87-81e7d6a57778
+                command: source scripts/setup-codecov && ./codecov -t bef3273d-1997-4764-9c87-81e7d6a57778

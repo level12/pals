@@ -108,8 +108,7 @@ With tox::
 
 Or, manually (assuming an activated virtualenv)::
 
-    $ pip install -r requirements/dev.txt
-    $ pip install -e .
+    $ pip install -e .[tests]
     $ pytest pals/tests/
 
 
