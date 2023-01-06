@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.3 released 2023-01-06
+-------------------------
+
+- add additional info to AcquireFailure exception (6d81db9_)
+
+.. _6d81db9: https://github.com/level12/pals/commit/6d81db9
+
+
 0.3.2 released 2021-02-01
 -------------------------
 
