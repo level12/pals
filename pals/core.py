@@ -84,7 +84,7 @@ class Locker:
         name = self._lock_name(name)
         kwargs.setdefault('blocking', self.blocking_default)
         kwargs.setdefault('acquire_timeout', self.acquire_timeout_default)
-        return Lock(self.engine.connect(), lock_num, name, **kwargs)
+        return Lock(self.engine, lock_num, name, **kwargs)
 
 
 class Lock:
@@ -106,14 +106,16 @@ class Lock:
 
         if blocking:
             timeout_sql = sa.text('set lock_timeout = :timeout')
-            self.conn.execute(timeout_sql, timeout=acquire_timeout)
+            with self.conn.begin():
+                self.conn.execute(timeout_sql, {'timeout': acquire_timeout})
 
             lock_sql = sa.text(f'select pg_advisory_lock{self.shared_suffix}(:lock_num)')
         else:
             lock_sql = sa.text(f'select pg_try_advisory_lock{self.shared_suffix}(:lock_num)')
 
         try:
-            result = self.conn.execute(lock_sql, lock_num=self.lock_num)
+            with self.conn.begin():
+                result = self.conn.execute(lock_sql, {'lock_num': self.lock_num})
             retval = result.scalar()
             log.debug('Lock result was: %r', retval)
             # At least on PG 10.6, pg_advisory_lock() returns an empty string
@@ -140,7 +142,8 @@ class Lock:
             return False
 
         sql = sa.text(f'select pg_advisory_unlock{self.shared_suffix}(:lock_num)')
-        result = self.conn.execute(sql, lock_num=self.lock_num)
+        with self.conn.begin():
+            result = self.conn.execute(sql, {'lock_num': self.lock_num})
         self.conn.close()
         self.conn = None
         return result.scalar()
