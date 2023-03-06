@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.4 released 2023-03-06
+-------------------------
+
+- support SQLAlchemy 2.0 (6879081_)
+
+.. _6879081: https://github.com/level12/pals/commit/6879081
+
+
 0.3.3 released 2023-01-06
 -------------------------
 
