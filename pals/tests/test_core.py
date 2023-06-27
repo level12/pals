@@ -3,6 +3,8 @@ import gc
 import os
 import random
 import string
+import threading
+import time
 
 import pytest
 
@@ -189,3 +191,35 @@ class TestLock:
         gc.collect()
 
         assert self.locker.lock('test_it', blocking=False).acquire()
+
+    def test_contention_on_connection_pool(self):
+        """
+        Given N = size of connection pool, run N + 1 threads that all try to
+        acquire locks (different ones) at the same time.
+
+        The first N threads should all acquire a lock. The last thread should
+        wait until one of the first N threads releases their lock, then acquire
+        it normally.
+
+        This test demonstrates issue #40.
+        """
+        set_size = self.locker.engine.pool.size() + 1
+        results = [None] * set_size
+
+        def target(n):
+            try:
+                with self.locker.lock(f"example-{n}"):
+                    time.sleep(0.05)
+                results[n] = True
+            except Exception as e:
+                results[n] = e
+
+        threads = [threading.Thread(target=target, args=(n,)) for n in range(set_size)]
+
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join()
+
+        assert [r for r in results if isinstance(r, Exception)] == []
+

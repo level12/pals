@@ -144,9 +144,11 @@ class Lock:
         sql = sa.text(f'select pg_advisory_unlock{self.shared_suffix}(:lock_num)')
         with self.conn.begin():
             result = self.conn.execute(sql, {'lock_num': self.lock_num})
-        self.conn.close()
-        self.conn = None
-        return result.scalar()
+        try:
+            return result.scalar()
+        finally:
+            self.conn.close()
+            self.conn = None
 
     def __enter__(self):
         self._acquire()
