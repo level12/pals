@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.3.5 released 2023-06-29
+-------------------------
+
+- fix cursor usage after connection close (thanks to @moser) (ded88e7_)
+
+.. _ded88e7: https://github.com/level12/pals/commit/ded88e7
+
+
 0.3.4 released 2023-03-06
 -------------------------
 
