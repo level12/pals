@@ -222,4 +222,3 @@ class TestLock:
             thread.join()
 
         assert [r for r in results if isinstance(r, Exception)] == []
-

@@ -16,14 +16,12 @@ jobs:
 
             - run:
                 name: install latest version of tox
-                command: python3.7 -m pip install --upgrade --force-reinstall --quiet tox
+                command: python3.10 -m pip install --upgrade --force-reinstall --quiet tox
 
             - run:
                 name: version checks
                 command: |
-                    python --version
-                    pip --version
-                    virtualenv --version
+                    python3.10 --version
                     tox --version
 
             - run:
