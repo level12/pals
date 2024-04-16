@@ -41,7 +41,7 @@ setup(
         'tests': [
             'pytest',
             'pytest-cov',
-            'psycopg2-binary',
+            'psycopg[binary]',
         ],
     }
 )

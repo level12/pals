@@ -105,7 +105,7 @@ class Lock:
             self.conn = self.engine.connect()
 
         if blocking:
-            timeout_sql = sa.text('set lock_timeout = :timeout')
+            timeout_sql = sa.text("select set_config('lock_timeout', :timeout :: text, false)")
             with self.conn.begin():
                 self.conn.execute(timeout_sql, {'timeout': acquire_timeout})
 

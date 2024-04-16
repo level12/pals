@@ -10,8 +10,19 @@ import pytest
 
 import pals
 
+try:
+    import psycopg  # noqa: F401
+
+    db_driver = 'postgresql+psycopg'
+except ImportError:
+    db_driver = 'postgresql'
+
+
 # Default URL will work for CI tests
-db_url = os.environ.get('PALS_DB_URL', 'postgresql://postgres:password@localhost/postgres')
+db_url = os.environ.get(
+    'PALS_DB_URL',
+    f'{db_driver}://postgres:password@localhost/postgres'
+)
 
 
 def random_str(length):
