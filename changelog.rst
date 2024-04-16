@@ -1,6 +1,16 @@
 Changelog
 =========
 
+0.4.0 released 2024-04-16
+-------------------------
+
+- support psycopg3, backwards compatible with psycopg2 (thanks to @petr.prikryl) (0139bea_)
+- remove python 3.7 and 3.8 from CI, resolve flake8 issue (24bff1f_)
+
+.. _0139bea: https://github.com/level12/pals/commit/0139bea
+.. _24bff1f: https://github.com/level12/pals/commit/24bff1f
+
+
 0.3.5 released 2023-06-29
 -------------------------
 
