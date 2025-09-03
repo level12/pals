@@ -58,6 +58,7 @@ class Locker:
                 # connection is going to be recycled.  This step is to take extra care that we don't
                 # accidentally leave a lock acquired.
                 cur.execute('select pg_advisory_unlock_all()')
+            dbapi_connection.rollback()
 
     def _lock_name(self, name):
         if self.app_name is None:
