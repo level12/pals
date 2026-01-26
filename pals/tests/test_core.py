@@ -233,3 +233,85 @@ class TestLock:
             thread.join()
 
         assert [r for r in results if isinstance(r, Exception)] == []
+
+
+class TestTaintTracking:
+    def test_successful_acquire_taints_connection(self):
+        locker = pals.Locker("TestTaint", db_url, acquire_timeout_default=100)
+        lock = locker.lock("taint_test")
+
+        # Before acquire - no tainted connections
+        assert len(locker._tainted_connection_ids) == 0
+
+        # After successful acquire - connection should be tainted
+        assert lock.acquire() is True
+        assert len(locker._tainted_connection_ids) == 1
+
+        # After release (and connection returned to pool) - should be untainted
+        lock.release()
+        assert len(locker._tainted_connection_ids) == 0
+
+    def test_failed_acquire_does_not_taint_connection(self):
+        engine = sa.create_engine(
+            db_url,
+            pool_size=3,
+            max_overflow=0,
+        )
+        assert isinstance(engine.pool, sa.pool.QueuePool)
+
+        locker = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        lock1 = locker.lock("taint_test")
+        lock1.acquire()
+        locker2 = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        lock2 = locker2.lock("taint_test", blocking=False)
+        try:
+            lock2.acquire()
+        except pals.AcquireFailure:
+            print("Acquire failed as expected")
+            pass
+
+        assert len(locker2._tainted_connection_ids) == 0
+
+    def test_only_call_unlock_all_on_tainted(self):
+        log = []
+
+        if "+psycopg" in db_url:
+            class SpyCursor(pscyopg.Cursor):
+                def execute(self, query, params=None):
+                    log.append(query)
+                    return super().execute(query, params)
+        else:
+            import psycopg2
+
+            class SpyCursor(psycopg2.extensions.cursor):
+                def execute(self, query, vars=None):
+                    log.append(query)
+                    return super().execute(query, vars)
+
+        engine = sa.create_engine(
+            db_url,
+            pool_size=3,
+            max_overflow=0,
+            connect_args={"cursor_factory": SpyCursor},
+        )
+
+        locker = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        lock1 = locker.lock("taint_test")
+        lock1.acquire()
+
+        locker2 = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        lock2 = locker2.lock("taint_test", blocking=False)
+        try:
+            lock2.acquire()
+        except pals.AcquireFailure:
+            pass
+
+        # closes the underlying connection used by lock2
+        del lock2
+        # No calls to pg_advisory_unlock_all should have been made yet
+        assert "select pg_advisory_unlock_all()" not in log
+
+        # closes the underlying connection used by lock1
+        lock1.release()
+        # Expect exactly one call to pg_advisory_unlock_all
+        assert len([query for query in log if "pg_advisory_unlock_all" in query]) == 1
