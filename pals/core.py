@@ -30,10 +30,11 @@ class Locker:
         collide) and the SQLAlchemy engine instance (and therefore the connection pool).
     """
     def __init__(self, app_name, db_url=None, blocking_default=True, acquire_timeout_default=30000,
-            create_engine_callable=None):
+            create_engine_callable=None, connection_taint_tracking=False):
         self.app_name = app_name
         self.blocking_default = blocking_default
         self.acquire_timeout_default = acquire_timeout_default
+        self.connection_taint_tracking = connection_taint_tracking
 
         # pg_advisory_unlock_all is expensive, so we track which DB API connections
         # we used for lock and only run it on these.
@@ -57,14 +58,18 @@ class Locker:
                 # should already be released when the connection terminated.
                 return
 
-            connection_id = id(dbapi_connection)
-            if connection_id in self._tainted_connection_ids:
-                self._tainted_connection_ids.remove(connection_id)
+            # If the connection is "closed" we want all locks to be cleaned up since this
+            # connection is going to be recycled.  This step is to take extra care that we don't
+            # accidentally leave a lock acquired.
+            if not self.connection_taint_tracking:
                 with dbapi_connection.cursor() as cur:
-                    # If the connection is "closed" we want all locks to be cleaned up since this
-                    # connection is going to be recycled.  This step is to take extra care that we don't
-                    # accidentally leave a lock acquired.
                     cur.execute("select pg_advisory_unlock_all()")
+            else:
+                connection_id = id(dbapi_connection)
+                if connection_id in self._tainted_connection_ids:
+                    self._tainted_connection_ids.remove(connection_id)
+                    with dbapi_connection.cursor() as cur:
+                        cur.execute("select pg_advisory_unlock_all()")
 
     def _lock_name(self, name):
         if self.app_name is None:
@@ -94,7 +99,8 @@ class Locker:
         return Lock(self, lock_num, name, **kwargs)
 
     def _taint_connection(self, conn):
-        self._tainted_connection_ids.add(id(conn._dbapi_connection.dbapi_connection))
+        if self.connection_taint_tracking:
+            self._tainted_connection_ids.add(id(conn._dbapi_connection.dbapi_connection))
 
 
 class Lock:

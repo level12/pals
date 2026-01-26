@@ -9,6 +9,7 @@ import time
 import pytest
 
 import pals
+import sqlalchemy as sa
 
 try:
     import psycopg  # noqa: F401
@@ -259,10 +260,18 @@ class TestTaintTracking:
         )
         assert isinstance(engine.pool, sa.pool.QueuePool)
 
-        locker = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        locker = pals.Locker(
+            "TestTaint",
+            create_engine_callable=lambda: engine,
+            connection_taint_tracking=True,
+        )
         lock1 = locker.lock("taint_test")
         lock1.acquire()
-        locker2 = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        locker2 = pals.Locker(
+            "TestTaint",
+            create_engine_callable=lambda: engine,
+            connection_taint_tracking=True,
+        )
         lock2 = locker2.lock("taint_test", blocking=False)
         try:
             lock2.acquire()
@@ -295,11 +304,19 @@ class TestTaintTracking:
             connect_args={"cursor_factory": SpyCursor},
         )
 
-        locker = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        locker = pals.Locker(
+            "TestTaint",
+            create_engine_callable=lambda: engine,
+            connection_taint_tracking=True,
+        )
         lock1 = locker.lock("taint_test")
         lock1.acquire()
 
-        locker2 = pals.Locker("TestTaint", create_engine_callable=lambda: engine)
+        locker2 = pals.Locker(
+            "TestTaint",
+            create_engine_callable=lambda: engine,
+            connection_taint_tracking=True,
+        )
         lock2 = locker2.lock("taint_test", blocking=False)
         try:
             lock2.acquire()
