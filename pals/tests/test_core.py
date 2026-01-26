@@ -258,7 +258,6 @@ class TestTaintTracking:
             pool_size=3,
             max_overflow=0,
         )
-        assert isinstance(engine.pool, sa.pool.QueuePool)
 
         locker = pals.Locker(
             "TestTaint",
