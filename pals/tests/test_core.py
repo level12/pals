@@ -248,7 +248,7 @@ class TestLock:
         lock1.release()
 
         # Second lock attempt triggers connection pool checkout with pre-ping.
-        # If we did not leave the underlying DBAPI connection in the correct state, this fails.
+        # If we did not return the underlying DBAPI connection in the correct state, this fails.
         lock2 = locker.lock("my-lock2")
         lock2.acquire()
         lock2.release()
