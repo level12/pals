@@ -28,6 +28,13 @@ class Locker:
 
         It holds the name of the application (so lock names are namespaced and less likely to
         collide) and the SQLAlchemy engine instance (and therefore the connection pool).
+
+        If `connection_taint_tracking` is enabled, the class will keep track of the connections
+        that have been used for locks and will only call `pg_advisory_unlock_all` on these
+        connections when they are returned to the pool.
+        If `connection_taint_tracking` is disabled (default), it will call `pg_advisory_unlock_all`
+        on all connections that are returned to the pool. This is slightly more safe, but also
+        more expensive.
     """
     def __init__(self, app_name, db_url=None, blocking_default=True, acquire_timeout_default=30000,
             create_engine_callable=None, connection_taint_tracking=False):
