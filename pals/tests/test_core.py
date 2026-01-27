@@ -233,3 +233,22 @@ class TestLock:
             thread.join()
 
         assert [r for r in results if isinstance(r, Exception)] == []
+
+    def test_pool_pre_ping_compatibility(self):
+        import sqlalchemy as sa
+
+        engine = sa.create_engine(
+            db_url,
+            pool_pre_ping=True,
+        )
+
+        locker = pals.Locker(app_name="foo", create_engine_callable=lambda: engine)
+        lock1 = locker.lock("my-lock1")
+        lock1.acquire()
+        lock1.release()
+
+        # Second lock attempt triggers connection pool checkout with pre-ping.
+        # If we did not return the underlying DBAPI connection in the correct state, this fails.
+        lock2 = locker.lock("my-lock2")
+        lock2.acquire()
+        lock2.release()
