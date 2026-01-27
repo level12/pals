@@ -49,24 +49,26 @@ class Locker:
             self.engine = sa.create_engine(db_url)
 
         if unlock_all_on_checkin:
-            @sa.event.listens_for(self.engine, 'checkin')
-            def on_conn_checkin(dbapi_connection, connection_record):
-                """
-                    This function will be called when a connection is checked back into the connection
-                    pool.  That should happen when .close() is called on it or when the connection
-                    proxy goes out of scope and is garbage collected.
-                """
-                if dbapi_connection is None:
-                    # This may occur in rare circumstances where the connection is already closed or an
-                    # error occurred while connecting to the database. In these cases any held locks
-                    # should already be released when the connection terminated.
-                    return
+            sa.event.listen(self.engine, 'checkin', self.on_conn_checkin)
 
-                with dbapi_connection.cursor() as cur:
-                    # If the connection is "closed" we want all locks to be cleaned up since this
-                    # connection is going to be recycled.  This step is to take extra care that we don't
-                    # accidentally leave a lock acquired.
-                    cur.execute('select pg_advisory_unlock_all()')
+    def on_conn_checkin(self, dbapi_connection, connection_record):
+        """
+            This method will be called when a connection is checked back into the connection
+            pool and `unlock_all_on_checkin` is true. A connection is checked
+            in to the pool when .close() is called on it or when the connection
+            proxy goes out of scope and is garbage collected.
+        """
+        if dbapi_connection is None:
+            # This may occur in rare circumstances where the connection is already closed or an
+            # error occurred while connecting to the database. In these cases any held locks
+            # should already be released when the connection terminated.
+            return
+
+        with dbapi_connection.cursor() as cur:
+            # If the connection is "closed" we want all locks to be cleaned up since this
+            # connection is going to be recycled.  This step is to take extra care that we don't
+            # accidentally leave a lock acquired.
+            cur.execute('select pg_advisory_unlock_all()')
 
     def _lock_name(self, name):
         if self.app_name is None:
