@@ -141,6 +141,10 @@ connection (a.k.a session) ends, even if the client disconnects ungracefully.  S
 crashes or otherwise disappears, PostgreSQL should notice and remove all locks held by that
 connection/session.
 
+Please note that `pg_advisory_unlock_all` takes some time. In high frequency cases, you might
+want to disable it (by passing `unlock_all_on_checkin=False` to the `Locker`).
+Users should monitor locks in this case and recycle connections regularly.
+
 The possibility could exist that PostgreSQL does not detect a connection has closed and keeps
 a lock open indefinitely.  However, in manual testing using `scripts/hang.py` no way was found
 to end the Python process without PostgreSQL detecting it.
