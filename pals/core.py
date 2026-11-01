@@ -114,7 +114,7 @@ class Lock:
 
     def _acquire(self, blocking=None, acquire_timeout=None) -> bool:
         blocking = blocking if blocking is not None else self.blocking
-        acquire_timeout = acquire_timeout or self.acquire_timeout
+        acquire_timeout = acquire_timeout if acquire_timeout is not None else self.acquire_timeout
 
         if self.conn is None:
             self.conn = self.engine.connect()
