@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# [MISE] description="Bootstrap project"
+#
+# Originates from https://github.com/level12/coppy
+#
+# Consider updating the source file in that repo with enhancements or bug fixes needed.
+set -e
+
+echo 'VIRTUAL_ENV:' $VIRTUAL_ENV
+echo 'PATH:' $PATH
+git init
+uv sync
+prek install
+prek update
+ruff check --fix
+ruff format
+git add .
+git commit -m 'initial commit after coppy generation'

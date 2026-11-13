@@ -1,0 +1,49 @@
+name: Nox
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+
+# Limit this workflow to a single run at a time per-branch to avoid wasting worker resources
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  # JOB
+  nox-other:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        session: [audit, build, prek]
+
+    steps:
+      - uses: level12/coppy/gh-actions/nox-run@main
+        with:
+          nox-session: ${{ matrix.session }}
+
+  # JOB
+  nox-pytest:
+    runs-on: ubuntu-latest
+
+    # Specifying the permissions block sets anything not-specified to `none` so we have have to
+    # re-specify the default read permission to be able to set the write permission.
+    permissions:
+      contents: read    # For actions/checkout
+      id-token: write   # For codecov OIDC
+
+    steps:
+      - uses: level12/coppy/gh-actions/nox-run@main
+        with:
+          nox-session: pytest
+
+      - uses: codecov/codecov-action@v5
+        with:
+          use_oidc: true

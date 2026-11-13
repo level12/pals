@@ -1,0 +1,40 @@
+# This is the "top-most" .editorconfig for this project.
+# Like a `.gitignore` file, you can place additional
+# .editorconfig files in specific directories, if you need
+# local settings. However, this directive specifies that
+# no "global" settings will be used (settings from higher-
+# up in the directory hierarchy, wherever that may be)
+root = true
+
+# Set the default whitespace settings for all files
+[*]
+# Sensible modern default
+charset = utf-8
+
+# Use UNIX-style line endings
+end_of_line = lf
+
+# 4-space indents
+indent_size = 4
+indent_style = space
+
+# end all files with a newline
+insert_final_newline = true
+
+# trim whitespace from the ends of lines
+trim_trailing_whitespace = true
+
+
+[*.{yml,yaml}]
+# Set two-space indents for YAML files
+indent_size = 2
+
+
+[*.md]
+# Match the line length setting in rumdl.toml.
+max_line_length = 90
+
+
+[Makefile]
+# Makefiles *must* use tabs!
+indent_style = tab

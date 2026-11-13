@@ -1,0 +1,47 @@
+[global]
+flavor = "gfm"
+line-length = 90
+
+
+# MD013: Line length.
+# Ignore line length for code blocks and tables.
+# Reflow normal prose where possible.
+[MD013]
+code-blocks = false
+tables = false
+reflow = true
+
+
+# MD022: Headings should be surrounded by blank lines.
+# Require two blank lines above headings and one blank line below.
+# Allow headings at the start of a file without requiring leading blank lines.
+[MD022]
+lines-above = 2
+lines-below = 1
+allowed-at-start = true
+
+
+# MD004: Unordered list marker style.
+# Require dash-style bullets: "- item".
+[MD004]
+style = "dash"
+
+
+# MD007: Unordered list indentation.
+# Require nested list items to be indented by four spaces.
+# Use fixed indentation rather than aligning to parent text.
+[MD007]
+indent = 4
+style = "fixed"
+
+
+# MD046: Code block style.
+# Require fenced code blocks instead of indented code blocks.
+[MD046]
+style = "fenced"
+
+
+# MD048: Fenced code block style.
+# Require backtick fences instead of tilde fences.
+[MD048]
+style = "backtick"

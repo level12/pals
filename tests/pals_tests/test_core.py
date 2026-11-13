@@ -10,6 +10,7 @@ import pytest
 
 import pals
 
+
 try:
     import psycopg  # noqa: F401
 
@@ -19,10 +20,7 @@ except ImportError:
 
 
 # Default URL will work for CI tests
-db_url = os.environ.get(
-    'PALS_DB_URL',
-    f'{db_driver}://postgres:password@localhost/postgres'
-)
+db_url = os.environ.get('PALS_DB_URL', f'{db_driver}://postgres:password@localhost/postgres')
 
 
 def random_str(length):
@@ -30,14 +28,13 @@ def random_str(length):
 
 
 class TestLocker:
-
     def test_lock_num_generation(self):
         """
-            Create 5000 random strings of varying lengths, convert them to their lock number, and
-            make sure we still have 5000 unique numbers.  Given that any application using locking
-            is probably going to have, at most, locks numbering in the tens or very low hundreds,
-            this seems like an ok way to test that the method we are using to convert our strings
-            into numbers is unlikely to have accidental collisions.
+        Create 5000 random strings of varying lengths, convert them to their lock number, and
+        make sure we still have 5000 unique numbers.  Given that any application using locking
+        is probably going to have, at most, locks numbering in the tens or very low hundreds,
+        this seems like an ok way to test that the method we are using to convert our strings
+        into numbers is unlikely to have accidental collisions.
         """
         locker = pals.Locker('TestLocker', db_url)
 
@@ -51,8 +48,12 @@ class TestLocker:
         assert lock.blocking is True
         assert lock.acquire_timeout == 30000
 
-        lock = pals.Locker('bar', db_url, blocking_default=False, acquire_timeout_default=1000) \
-            .lock('a')
+        lock = pals.Locker(
+            'bar',
+            db_url,
+            blocking_default=False,
+            acquire_timeout_default=1000,
+        ).lock('a')
         assert lock.blocking is False
         assert lock.acquire_timeout == 1000
 
@@ -66,6 +67,10 @@ def duration(started_at):
 
 class TestLock:
     locker = pals.Locker('TestLock', db_url, acquire_timeout_default=1000)
+
+    @classmethod
+    def teardown_class(cls):
+        cls.locker.engine.dispose()
 
     def test_same_lock_fails_acquire(self):
         lock1 = self.locker.lock('test_it')
@@ -113,8 +118,8 @@ class TestLock:
 
     def test_class_params_used(self):
         """
-            If blocking & timeout params are set on the class, make sure they are passed through and
-            used correctly.
+        If blocking & timeout params are set on the class, make sure they are passed through and
+        used correctly.
         """
         lock1 = self.locker.lock('test_it')
         lock2 = self.locker.lock('test_it', blocking=False)
@@ -140,7 +145,7 @@ class TestLock:
 
     def test_shared_lock(self):
         """
-            Test shared lock.
+        Test shared lock.
         """
         shared_lock = self.locker.lock('test_it', shared=True)
         another_shared_lock = self.locker.lock('test_it', shared=True)
@@ -181,19 +186,21 @@ class TestLock:
 
     def test_context_manager_failure_to_acquire(self):
         """
-            By default, we want a context manager's failure to acquire to be a hard error so that
-            a developer doesn't have to remember to explicilty check the return value of acquire
-            when using a with statement.
+        By default, we want a context manager's failure to acquire to be a hard error so that
+        a developer doesn't have to remember to explicilty check the return value of acquire
+        when using a with statement.
         """
         lock2 = self.locker.lock('test_it', blocking=False)
         assert lock2.acquire() is True
 
-        with pytest.raises(
-            pals.AcquireFailure,
-            match='Lock acquire failed for "TestLock.test_it". Failed due to timeout.',
+        with (
+            pytest.raises(
+                pals.AcquireFailure,
+                match=r'Lock acquire failed for "TestLock\.test_it"\. Failed due to timeout\.',
+            ),
+            self.locker.lock('test_it'),
         ):
-            with self.locker.lock("test_it"):
-                pass  # we should never hit this line
+            pass  # we should never hit this line
 
     def test_gc_lock_release(self):
         lock1 = self.locker.lock('test_it')
@@ -219,7 +226,7 @@ class TestLock:
 
         def target(n):
             try:
-                with self.locker.lock(f"example-{n}"):
+                with self.locker.lock(f'example-{n}'):
                     time.sleep(0.05)
                 results[n] = True
             except Exception as e:
@@ -242,13 +249,16 @@ class TestLock:
             pool_pre_ping=True,
         )
 
-        locker = pals.Locker(app_name="foo", create_engine_callable=lambda: engine)
-        lock1 = locker.lock("my-lock1")
-        lock1.acquire()
-        lock1.release()
+        try:
+            locker = pals.Locker(app_name='foo', create_engine_callable=lambda: engine)
+            lock1 = locker.lock('my-lock1')
+            lock1.acquire()
+            lock1.release()
 
-        # Second lock attempt triggers connection pool checkout with pre-ping.
-        # If we did not return the underlying DBAPI connection in the correct state, this fails.
-        lock2 = locker.lock("my-lock2")
-        lock2.acquire()
-        lock2.release()
+            # Second lock attempt triggers connection pool checkout with pre-ping.
+            # If we did not return the underlying DBAPI connection in the correct state, this fails.
+            lock2 = locker.lock('my-lock2')
+            lock2.acquire()
+            lock2.release()
+        finally:
+            engine.dispose()

@@ -1,0 +1,91 @@
+line-length = 100
+output-format = 'concise'
+
+[format]
+line-ending = 'lf'
+quote-style = 'single'
+
+
+[lint]
+fixable = [
+    'C4',
+    'COM',
+    'I',
+    'ISC',
+    'PIE',
+    'Q',
+    'UP',
+
+    'E711',    # Comparison to `None` should be `cond is None`
+    'E712',    # Comparison to `True` should be `cond is True` or `if cond:`
+    'E713',    # Test for membership should be `not in`
+    'E714',    # Test for object identity should be `is not`
+    'F901',    # `raise NotImplemented` should be `raise NotImplementedError`
+    'RUF100',  # Unused blanket noqa directive
+    'W291',    # Trailing whitespace
+    'W293',    # Blank line contains whitespace
+]
+select = [
+    'E',   # ruff default: pycodestyle errors
+    'W',   # pycodestyle warnings
+    'F',   # ruff default: pyflakes
+    'I',   # isort
+    'Q',   # flake8-quotes
+    'UP',  # pyupgrade
+    'YTT', # flake8-2020
+    'B',   # flake8-bandit
+    'A',   # flake8-builtins
+    'C4',  # flake8-comprehensions
+    'T10', # flake8-debugger
+    'DJ',  # flake8-django
+    'EXE', # flake8-executable
+    'PIE', # flake8-pie
+    'COM', # flake-8 commas
+    'RUF', # ruff specific
+    'SIM', # flake8-simplify
+    'ISC',  # https://pypi.org/project/flake8-implicit-str-concat/
+    'PTH',  # flake8-use-pathlib
+    # 'DTZ',  # flake8-datetimez
+
+]
+ignore = [
+    'A003',    # Class attribute is shadowing a Python builtin
+    'E731',    # Do not assign a `lambda` expression, use a `def`
+
+    # Rules that conflict with the formatter.  See:
+    #
+    #  * https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    #  * https://github.com/level12/coppy/issues/13
+    #
+    # These are all redundant when the formatter is being used
+    'W191',    # tab-indentation
+    'E111',    # indentation-with-invalid-multiple
+    'E114',    # indentation-with-invalid-multiple-comment
+    'E117',    # over-indented
+    'D206',    # indent-with-spaces
+    'D300',    # triple-single-quotes
+    'Q000',    # bad-quotes-inline-string
+    'Q001',    # bad-quotes-multiline-string
+    'Q002',    # bad-quotes-docstring
+    'Q003',    # avoidable-escaped-quote
+]
+
+
+[lint.per-file-ignores]
+'tasks/*.py' = ['EXE003']
+
+
+[lint.flake8-builtins]
+ignorelist = ['id', 'help', 'compile']
+
+
+[lint.flake8-quotes]
+# Prefer using different quote to escaping strings
+avoid-escape = true
+inline-quotes = 'single'
+
+
+[lint.isort]
+lines-after-imports = 2
+force-sort-within-sections = true
+known-local-folder = ['src', 'tests']

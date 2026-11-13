@@ -1,0 +1,138 @@
+#!/usr/bin/env python
+# [MISE] description="Manage version"
+"""
+Originates from https://github.com/level12/coppy
+
+Consider updating the source file in that repo with enhancements or bug fixes needed.
+"""
+
+import datetime as dt
+from pathlib import Path
+import re
+
+import click
+
+from pals.utils import sub_run
+
+
+VERSION_FPATH = Path(__file__).resolve().parents[1] / 'src' / 'pals' / 'version.py'
+VERSION_RE = re.compile(r"^VERSION = '(?P<version>[^']+)'$", re.MULTILINE)
+
+
+class Version:
+    def __init__(self) -> None:
+        if not (match := VERSION_RE.search(VERSION_FPATH.read_text())):
+            raise ValueError(f'Unable to find VERSION in {VERSION_FPATH}')
+
+        self.current = match['version']
+
+    def next(
+        self,
+        kind: str,
+        *,
+        current: str | None = None,
+    ) -> str:
+        major, minor, patch = map(int, (current or self.current).split('.')[:3])
+        if kind == 'date':
+            minor_ = int(dt.date.today().strftime('%Y%m%d'))
+            patch = patch + 1 if minor == minor_ else 1
+            return f'{major}.{minor_}.{patch}'
+
+        if kind == 'major':
+            return f'{major + 1}.0.0'
+
+        if kind == 'minor':
+            return f'{major}.{minor + 1}.0'
+
+        if kind == 'micro':
+            return f'{major}.{minor}.{patch + 1}'
+
+        raise ValueError(f'Unsupported bump kind: {kind}')
+
+    def save(self, version: str, *, sign: bool) -> None:
+        text, count = VERSION_RE.subn(
+            f"VERSION = '{version}'",
+            VERSION_FPATH.read_text(),
+            count=1,
+        )
+        if count != 1:
+            raise ValueError(f'Unable to update VERSION in {VERSION_FPATH}')
+
+        VERSION_FPATH.write_text(text)
+        sub_run('git', 'add', VERSION_FPATH)
+        sub_run('git', 'commit', '-m', f'Bump version {self.current} → {version}')
+        sub_run('git', 'tag', '-s' if sign else '-a', f'v{version}', '-m', f'Release v{version}')
+        self.current = version
+
+
+@click.group()
+def main() -> None:
+    """Show or bump the project version."""
+
+
+@main.command()
+def show() -> None:
+    """Show the current version."""
+    click.echo(Version().current)
+
+
+@main.command('bump')
+@click.argument('kind', type=click.Choice(('micro', 'minor', 'major', 'date')), default='date')
+@click.option('--show', is_flag=True, help="Only show next version, don't bump (date only)")
+@click.option('--current', help='Simulate current version (date only)')
+@click.option(
+    '--sign/--no-sign',
+    envvar='COPPY_VERSION_SIGN',
+    default=True,
+    help='Sign the release tag.',
+    show_default=True,
+)
+@click.option('--push/--no-push', help='Push after bump', default=True)
+@click.pass_context
+def bump_cli(
+    ctx: click.Context,
+    kind: str,
+    show: bool,
+    current: str | None,
+    sign: bool,
+    push: bool,
+) -> None:
+    """
+    Bump the version and (by default) git push including tags.
+
+    Date based versioning is the default.  Examples:
+
+        v0.20231231.1
+        v0.20231231.2
+        v0.20240101.1
+
+    A normal bump will increment the minor or micro slot.  Use a major bump when making breaking
+    changes in a library, e.g.:
+
+        $ mise run version bump major
+        Old: 0.20240515.1
+        New: 1.0.0
+
+    Major, minor, and micro bumps are provided for completeness.  If using date based versioning
+    only `date` and `major` need to be used.
+    """
+    if show and kind != 'date':
+        ctx.fail('--show is only valid with date versioning')
+    if current and kind != 'date':
+        ctx.fail('--current is only valid with date versioning')
+
+    version = Version()
+    next_ver = version.next(kind, current=current)
+
+    if show:
+        click.echo(f'Current: {current or version.current}')
+        click.echo(f'Next: {next_ver}')
+        return
+
+    version.save(next_ver, sign=sign)
+    if push:
+        sub_run('git', 'push', '--follow-tags')
+
+
+if __name__ == '__main__':
+    main()

@@ -132,4 +132,3 @@ Project Cleanup
 .. _3372ef0: https://github.com/level12/pals/commit/3372ef0
 .. _cebd976: https://github.com/level12/pals/commit/cebd976
 .. _871b877: https://github.com/level12/pals/commit/871b877
-

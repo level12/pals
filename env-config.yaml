@@ -1,0 +1,3 @@
+profile:
+  pypi:
+    UV_PUBLISH_TOKEN: 'op://my/private/pypi.org/api-token'
