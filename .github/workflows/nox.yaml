@@ -33,6 +33,23 @@ jobs:
   nox-pytest:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      PALS_DB_URL: postgresql://postgres:password@localhost:5432/postgres
+
     # Specifying the permissions block sets anything not-specified to `none` so we have have to
     # re-specify the default read permission to be able to set the write permission.
     permissions:
