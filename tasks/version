@@ -9,14 +9,17 @@ Consider updating the source file in that repo with enhancements or bug fixes ne
 import datetime as dt
 from pathlib import Path
 import re
+import subprocess
 
 import click
-
-from pals.utils import sub_run
 
 
 VERSION_FPATH = Path(__file__).resolve().parents[1] / 'src' / 'pals' / 'version.py'
 VERSION_RE = re.compile(r"^VERSION = '(?P<version>[^']+)'$", re.MULTILINE)
+
+
+def git_run(*args: str | Path) -> None:
+    subprocess.run(('git', *map(str, args)), check=True)
 
 
 class Version:
@@ -59,9 +62,9 @@ class Version:
             raise ValueError(f'Unable to update VERSION in {VERSION_FPATH}')
 
         VERSION_FPATH.write_text(text)
-        sub_run('git', 'add', VERSION_FPATH)
-        sub_run('git', 'commit', '-m', f'Bump version {self.current} → {version}')
-        sub_run('git', 'tag', '-s' if sign else '-a', f'v{version}', '-m', f'Release v{version}')
+        git_run('add', VERSION_FPATH)
+        git_run('commit', '-m', f'Bump version {self.current} → {version}')
+        git_run('tag', '-s' if sign else '-a', f'v{version}', '-m', f'Release v{version}')
         self.current = version
 
 
@@ -131,7 +134,7 @@ def bump_cli(
 
     version.save(next_ver, sign=sign)
     if push:
-        sub_run('git', 'push', '--follow-tags')
+        git_run('push', '--follow-tags')
 
 
 if __name__ == '__main__':
