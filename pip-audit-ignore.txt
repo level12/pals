@@ -1,0 +1,2 @@
+# Add pip-audit vulnerability ids, one per line, to ignore them.
+# Comments work at the start of a line ONLY.

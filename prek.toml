@@ -1,0 +1,50 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+# :schema https://www.schemastore.org/prek.json
+
+[[repos]]
+repo = 'https://github.com/pre-commit/pre-commit-hooks'
+rev = 'v6.0.0'
+hooks = [
+  { id = 'check-merge-conflict' },
+  { id = 'check-ast', types = ['python'] },
+  { id = 'debug-statements', types = ['python'] },
+  { id = 'trailing-whitespace' },
+  { id = 'end-of-file-fixer' },
+  { id = 'check-added-large-files' },
+  { id = 'check-yaml' },
+]
+
+[[repos]]
+repo = 'https://github.com/astral-sh/ruff-pre-commit'
+rev = "v0.16.2"
+hooks = [
+  { id = 'ruff-check' },
+  # Due to the Ruff config we use (see comment in ruff.toml), it's possible that the
+  # formatter creates linting failures. By only doing a check here, it forces the dev to run
+  # the formatter before prek runs (presumably on save through their editor) and then the
+  # linting check above would always catch a problem created by the formatter.
+  { id = 'ruff-format', args = ['--check'] },
+]
+
+[[repos]]
+repo = 'https://github.com/level12/pre-commit-hooks'
+rev = 'v0.20260509.3'
+hooks = [
+  { id = 'check-ruff-versions' },
+]
+
+[[repos]]
+repo = 'https://github.com/rvben/rumdl-pre-commit'
+rev = 'v0.2.55'
+hooks = [
+  # Run rumdl check
+  { id = 'rumdl' },
+]
+
+[[repos]]
+repo = 'https://github.com/astral-sh/uv-pre-commit'
+rev = "0.12.3"
+hooks = [
+  { id = 'uv-lock' },
+]
