@@ -5,9 +5,10 @@ import random
 import string
 import threading
 import time
-from unittest.mock import MagicMock
+from unittest.mock import create_autospec
 
 import pytest
+from sqlalchemy.engine import Connection, Engine, Result, RootTransaction
 
 import pals
 
@@ -156,11 +157,16 @@ class TestLock:
         ],
     )
     def test_acquire_timeout_configuration(self, acquire_kwargs, expected_timeout):
-        engine = MagicMock()
-        conn = engine.connect.return_value
-        lock_result = MagicMock()
+        engine = create_autospec(Engine, instance=True)
+        conn = create_autospec(Connection, instance=True)
+        transaction = create_autospec(RootTransaction, instance=True)
+        timeout_result = create_autospec(Result, instance=True)
+        lock_result = create_autospec(Result, instance=True)
+
+        engine.connect.return_value = conn
+        conn.begin.return_value = transaction
         lock_result.scalar.return_value = ''
-        conn.execute.side_effect = [MagicMock(), lock_result]
+        conn.execute.side_effect = [timeout_result, lock_result]
         lock = pals.core.Lock(
             engine,
             lock_num=1,
