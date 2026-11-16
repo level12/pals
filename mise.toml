@@ -1,0 +1,46 @@
+[hooks]
+enter = "uv sync"
+
+
+[tools]
+rumdl = 'latest'
+
+
+[settings]
+# Have mise get it's Python version from .python-version.  We get two other benefits:
+# 1) uv, apart from mise, will pick the correct python version, and `uv run` and similar can be used
+#   apart from mise.
+# 2) GitHub's setup-python action can be directed to the .python-version file
+idiomatic_version_file_enable_tools = ["python"]
+
+python.uv_venv_auto = "create|source"
+
+
+[task_config]
+includes = [
+    'tasks',
+]
+
+
+################ TASKS #################
+[tasks.pytest-cov]
+description = 'Full pytest run with html coverage report'
+# .coveragerc sets html output directory to: tmp/coverage-html
+# But coverage only looks for the rc file in the CWD, so start in proj root.
+dir = "{{ config_root }}"
+run = 'pytest --cov --cov-report=html --no-cov-on-fail'
+
+
+[tasks.upgrade-deps]
+description = 'Upgrade mise, uv, and prek dependencies'
+dir = "{{ config_root }}"
+run = [
+    'mise upgrade --local',
+    'uv sync --upgrade',
+    'prek update',
+]
+
+[tasks.rm-unused-imports]
+description = 'Remove unused imports using ruff'
+dir = "{{ config_root }}"
+run = 'ruff check --select F401 --fix --fixable F401 .'

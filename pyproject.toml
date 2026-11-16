@@ -1,0 +1,79 @@
+[build-system]
+requires = [
+    'hatchling',
+]
+build-backend = 'hatchling.build'
+
+
+[project]
+name = 'PALs'
+description = 'Easy distributed locking using PostgreSQL Advisory Locks.'
+authors = [
+    {name = 'Randy Syring', email = 'randy.syring@level12.io'},
+]
+requires-python = '>=3.12'
+dynamic = ['version']
+readme = 'readme.md'
+license = 'BSD-3-Clause'
+license-files = ['license.txt']
+classifiers = [
+    'Development Status :: 4 - Beta',
+    'Intended Audience :: Developers',
+    'License :: OSI Approved :: BSD License',
+    'Operating System :: OS Independent',
+    'Programming Language :: Python :: 3',
+    'Programming Language :: Python :: 3.12',
+    'Programming Language :: Python :: 3.13',
+    'Programming Language :: Python :: 3.14',
+]
+dependencies = [
+    'SQLAlchemy',
+]
+
+
+[project.urls]
+Homepage = 'https://github.com/level12/pals'
+Repository = 'https://github.com/level12/pals'
+
+
+[project.optional-dependencies]
+tests = [
+    'psycopg[binary]',
+    'pytest',
+    'pytest-cov',
+]
+
+
+[dependency-groups]
+dev = [
+    {include-group = "pytest"},
+    {include-group = "prek"},
+    {include-group = "audit"},
+    {include-group = "build"},
+    {include-group = "nox"},
+    'click',
+    'ruff==0.16.2',
+]
+# Used by nox
+pytest = [
+    'psycopg[binary]',
+    'pytest',
+    'pytest-cov',
+]
+# Used by nox
+prek = [
+    'prek',
+]
+# Used by nox
+audit = [
+    'pip-audit',
+]
+# Used by nox
+build = [
+    'build',
+    'twine',
+]
+# Used by CI
+nox = [
+    'nox',
+]

@@ -1,15 +1,13 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
+omit =
+    src/pals/version.py
 
-[report]
-# Regexes for lines to exclude from consideration
-exclude_lines =
-    # Have to re-enable the standard pragma
-    pragma: no cover
+source =
+    src/pals
+    tests/pals_tests
 
-    # testing assertions usually used with exceptions
-    assert False
 
-    # bare raise statements
-    raise\w*$
+[html]
+directory = tmp/coverage-html

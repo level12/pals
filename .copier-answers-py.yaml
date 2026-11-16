@@ -1,0 +1,22 @@
+# Changes here will be overwritten by Copier
+#
+# Updating `_src` could be helpful, see notes at:
+# https://github.com/level12/coppy/wiki#creating-a-project
+#
+# Otherwise, NEVER EDIT MANUALLY
+_commit: v1.20261112.2
+_src_path: gh:level12/coppy
+author_email: randy.syring@level12.io
+author_name: Randy Syring
+gh_org: level12
+gh_repo: pals
+project_name: PALs
+py_module: pals
+python_version: '3.14'
+python_version_min: '3.12'
+script_name: ''
+use_circleci: false
+use_codecov: true
+use_gh_nox: true
+use_js_cooldown: false
+use_rumdl: true

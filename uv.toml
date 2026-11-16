@@ -1,0 +1,2 @@
+# Supply-chain hardening for uv project commands.
+exclude-newer = "3 days"

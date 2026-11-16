@@ -1,0 +1,20 @@
+{
+    "editor.rulers": [100],
+
+
+    "[markdown]": {
+        "editor.rulers": [90],
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "rvben.rumdl"
+    },
+
+
+    "[python]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "charliermarsh.ruff",
+        "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+        }
+    }
+}

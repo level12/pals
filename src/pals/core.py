@@ -1,3 +1,4 @@
+from contextlib import suppress
 import hashlib
 import logging
 import struct
@@ -8,8 +9,8 @@ import sqlalchemy as sa
 log = logging.getLogger(__name__)
 
 __all__ = [
-    'Locker',
     'AcquireFailure',
+    'Locker',
 ]
 
 
@@ -24,21 +25,29 @@ class AcquireFailure(Exception):
 
 class Locker:
     """
-        A Locker instance is intended to be an app-level lock factory.
+    A Locker instance is intended to be an app-level lock factory.
 
-        It holds the name of the application (so lock names are namespaced and less likely to
-        collide) and the SQLAlchemy engine instance (and therefore the connection pool).
+    It holds the name of the application (so lock names are namespaced and less likely to
+    collide) and the SQLAlchemy engine instance (and therefore the connection pool).
 
-        If `unlock_all_on_checkin` is true (default), it will defensively do a
-        unlock all operation when connections are given back to the connection
-        pool. It is unlikely that a lock is left un-released (esp when using
-        the context manager), but this step adds safety.
-        The operation comes with some cost, so it may be desireable to disable
-        in high-frequency use cases. Users should monitor locks in this case
-        and recycle connections regularly.
+    If `unlock_all_on_checkin` is true (default), it will defensively do a
+    unlock all operation when connections are given back to the connection
+    pool. It is unlikely that a lock is left un-released (esp when using
+    the context manager), but this step adds safety.
+    The operation comes with some cost, so it may be desireable to disable
+    in high-frequency use cases. Users should monitor locks in this case
+    and recycle connections regularly.
     """
-    def __init__(self, app_name, db_url=None, blocking_default=True, acquire_timeout_default=30000,
-            create_engine_callable=None, unlock_all_on_checkin=True):
+
+    def __init__(
+        self,
+        app_name,
+        db_url=None,
+        blocking_default=True,
+        acquire_timeout_default=30000,
+        create_engine_callable=None,
+        unlock_all_on_checkin=True,
+    ):
         self.app_name = app_name
         self.blocking_default = blocking_default
         self.acquire_timeout_default = acquire_timeout_default
@@ -53,10 +62,10 @@ class Locker:
 
     def on_conn_checkin(self, dbapi_connection, connection_record):
         """
-            This method will be called when a connection is checked back into the connection
-            pool and `unlock_all_on_checkin` is true. A connection is checked
-            in to the pool when .close() is called on it or when the connection
-            proxy goes out of scope and is garbage collected.
+        This method will be called when a connection is checked back into the connection
+        pool and `unlock_all_on_checkin` is true. A connection is checked
+        in to the pool when .close() is called on it or when the connection
+        proxy goes out of scope and is garbage collected.
         """
         if dbapi_connection is None:
             # This may occur in rare circumstances where the connection is already closed or an
@@ -69,28 +78,28 @@ class Locker:
             # connection is going to be recycled.  This step is to take extra care that we don't
             # accidentally leave a lock acquired.
             cur.execute('select pg_advisory_unlock_all()')
-        # Connections in the pool should not have an open transaction, therefore we need to roll back
-        # before we return the connection because the execute above might have triggered an automatic
-        # BEGIN.
+        # Connections in the pool should not have an open transaction, therefore we need to roll
+        # back before returning the connection because the execute above might have triggered an
+        # automatic BEGIN.
         dbapi_connection.rollback()
 
     def _lock_name(self, name):
         if self.app_name is None:
             return name
 
-        return '{}.{}'.format(self.app_name, name)
+        return f'{self.app_name}.{name}'
 
     def _lock_num(self, name):
         """
-            PostgreSQL requires lock ids to be integers.  It accepts bigints which gives us
-            64 bits to work with.  Hash the lock name to an integer.
+        PostgreSQL requires lock ids to be integers.  It accepts bigints which gives us
+        64 bits to work with.  Hash the lock name to an integer.
         """
         name = self._lock_name(name)
 
         name_hash = hashlib.sha1(name.encode('utf-8'))
 
         # Convert the hash to an integer value in the range of a PostgreSQL bigint
-        num, = struct.unpack('q', name_hash.digest()[:8])
+        (num,) = struct.unpack('q', name_hash.digest()[:8])
 
         return num
 
@@ -139,12 +148,12 @@ class Lock:
             if retval in (True, ''):
                 return True
             else:
-                raise AcquireFailure(self.name, 'result was: {retval}')
+                raise AcquireFailure(self.name, f'result was: {retval}')
         except sa.exc.OperationalError as e:
             if 'lock timeout' not in str(e):
                 raise
             log.debug('Lock acquire failed due to timeout')
-            raise AcquireFailure(self.name, 'Failed due to timeout')
+            raise AcquireFailure(self.name, 'Failed due to timeout') from None
 
     def acquire(self, blocking=None, acquire_timeout=None) -> bool:
         try:
@@ -175,16 +184,10 @@ class Lock:
     def __del__(self):
         # Do everything we can to release resources and the connection to avoid accidentally holding
         # a lock indefinitely if .release() is forgotten.
-        try:
+        with suppress(Exception):
             self.release()
-        except Exception:
-            # Sometimes this will fail if the connection has gone away before the gc runs.  Since
-            # Python is just going to print the exception and we can't do anything about it,
-            # suppress the exception to keep erroneous noise out of stderr.
-            pass
-        try:
+        # Sometimes this will fail if the connection has gone away before the gc runs. Since Python
+        # would only print the exception and we cannot recover, suppress erroneous stderr noise.
+        with suppress(Exception):
             self.conn.close()
-        except Exception:
-            # ditto
-            pass
         del self.conn

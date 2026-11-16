@@ -1,13 +1,38 @@
-MANIFEST
-*.egg-info
+# Python
 *.pyc
-.coverage
-coverage.xml
-.tox/
-.cache/
-.ci/test-reports/*.xml
-dist
-build
+*.egg-info
+.venv
+
+# Tox/Nox/Tests/Coverage
+/.nox
+/.tox
+/ci/coverage-html
+*.coverage
+/coverage.xml
+*.pytests.xml
 .pytest_cache
-.vscode
-.env
+
+
+# Editor Clutter
+/.vscode/*
+!/.vscode/settings.json
+.idea
+
+
+# Build related
+dist
+/build
+.*-cache
+
+
+# Local dev files
+/mise.local.toml
+/tmp
+
+# Terraform
+*.tfstate*
+tf.plan
+.terraform
+
+
+# Project specific
