@@ -120,6 +120,7 @@ class Lock:
         self.blocking = blocking
         self.acquire_timeout = acquire_timeout
         self.shared_suffix = '_shared' if shared else ''
+        self._acquire_count = 0
 
     def _acquire(self, blocking=None, acquire_timeout=None, timeout=None) -> bool:
         if blocking is None:
@@ -152,6 +153,7 @@ class Lock:
             # when it acquires the lock.  pg_try_advisory_lock() returns True.
             # If pg_try_advisory_lock() fails, it returns False.
             if retval in (True, ''):
+                self._acquire_count += 1
                 return True
             else:
                 raise AcquireFailure(self.name, f'result was: {retval}')
@@ -189,10 +191,14 @@ class Lock:
         with self.conn.begin():
             result = self.conn.execute(sql, {'lock_num': self.lock_num})
         try:
-            return result.scalar()
+            retval = result.scalar()
+            if retval:
+                self._acquire_count -= 1
+            return retval
         finally:
-            self.conn.close()
-            self.conn = None
+            if self._acquire_count == 0:
+                self.conn.close()
+                self.conn = None
 
     def __enter__(self):
         self._acquire()
@@ -205,7 +211,8 @@ class Lock:
         # Do everything we can to release resources and the connection to avoid accidentally holding
         # a lock indefinitely if .release() is forgotten.
         with suppress(Exception):
-            self.release()
+            while self.conn is not None and self.release():
+                pass
         # Sometimes this will fail if the connection has gone away before the gc runs. Since Python
         # would only print the exception and we cannot recover, suppress erroneous stderr noise.
         with suppress(Exception):

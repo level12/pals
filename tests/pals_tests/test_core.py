@@ -118,6 +118,48 @@ class TestLock:
             lock1.release()
             lock2.release()
 
+    def test_repeated_acquire_requires_matching_releases(self):
+        lock1 = self.locker.lock('test_it')
+        lock2 = self.locker.lock('test_it', blocking=False)
+
+        try:
+            assert lock1.acquire() is True
+            assert lock1.acquire() is True
+
+            assert lock1.release() is True
+            assert lock2.acquire() is False
+
+            assert lock1.release() is True
+            assert lock2.acquire() is True
+        finally:
+            lock1.release()
+            lock2.release()
+
+    def test_repeated_acquire_keeps_connection_until_final_release(self):
+        engine = create_autospec(Engine, instance=True)
+        conn = create_autospec(Connection, instance=True)
+        transaction = create_autospec(RootTransaction, instance=True)
+        results = [create_autospec(Result, instance=True) for _ in range(4)]
+
+        engine.connect.return_value = conn
+        conn.begin.return_value = transaction
+        for result in results:
+            result.scalar.return_value = True
+        conn.execute.side_effect = results
+        lock = pals.core.Lock(engine, lock_num=1, name='test', blocking=False)
+
+        assert lock.acquire() is True
+        assert lock.acquire() is True
+        assert lock._acquire_count == 2
+
+        assert lock.release() is True
+        assert lock._acquire_count == 1
+        conn.close.assert_not_called()
+
+        assert lock.release() is True
+        assert lock._acquire_count == 0
+        conn.close.assert_called_once_with()
+
     def test_class_params_used(self):
         """
         If blocking & timeout params are set on the class, make sure they are passed through and
