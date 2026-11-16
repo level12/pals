@@ -5,6 +5,7 @@ import random
 import string
 import threading
 import time
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -142,6 +143,34 @@ class TestLock:
             lock1.release()
             lock2.release()
             lock3.release()
+
+    @pytest.mark.parametrize(
+        ('acquire_kwargs', 'expected_timeout'),
+        [
+            ({}, 30000),
+            ({'acquire_timeout': 0}, 0),
+            ({'timeout': -1}, 0),
+            ({'timeout': 0}, 1),
+            ({'timeout': 0.25}, 251),
+            ({'acquire_timeout': 500, 'timeout': 0.25}, 500),
+        ],
+    )
+    def test_acquire_timeout_configuration(self, acquire_kwargs, expected_timeout):
+        engine = MagicMock()
+        conn = engine.connect.return_value
+        lock_result = MagicMock()
+        lock_result.scalar.return_value = ''
+        conn.execute.side_effect = [MagicMock(), lock_result]
+        lock = pals.core.Lock(
+            engine,
+            lock_num=1,
+            name='test',
+            blocking=True,
+            acquire_timeout=30000,
+        )
+
+        assert lock.acquire(**acquire_kwargs) is True
+        assert conn.execute.call_args_list[0].args[1] == {'timeout': expected_timeout}
 
     def test_shared_lock(self):
         """
