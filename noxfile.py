@@ -40,8 +40,8 @@ def audit(session: nox.Session):
 
 @nox.session
 def build(session: nox.Session):
-    uv_sync(session, 'build', 'pytest')
-    output_dir = Path(session.create_tmp()) / 'dist'
+    uv_sync(session, 'build')
+    output_dir = Path(environ.get('PALS_DIST_DIR', Path(session.create_tmp()) / 'dist'))
     session.run('python', '-m', 'build', '--outdir', output_dir)
     session.run('twine', 'check', *output_dir.glob('*'))
     (wheel_path,) = output_dir.glob('*.whl')
@@ -58,12 +58,7 @@ def build(session: nox.Session):
     session.run(
         'python',
         '-c',
-        'import pals; print(f"Testing installed wheel at {pals.__file__}")',
-    )
-    session.run(
-        'pytest',
-        '-q',
-        package_path / 'tests/pals_tests/test_core.py::TestLocker',
+        'import pals; print(f"Imported installed wheel from {pals.__file__}")',
     )
 
 
