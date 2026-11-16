@@ -121,9 +121,15 @@ class Lock:
         self.acquire_timeout = acquire_timeout
         self.shared_suffix = '_shared' if shared else ''
 
-    def _acquire(self, blocking=None, acquire_timeout=None) -> bool:
-        blocking = blocking if blocking is not None else self.blocking
-        acquire_timeout = acquire_timeout or self.acquire_timeout
+    def _acquire(self, blocking=None, acquire_timeout=None, timeout=None) -> bool:
+        if blocking is None:
+            blocking = self.blocking
+
+        if acquire_timeout is None:
+            if timeout is not None:
+                acquire_timeout = 0 if timeout < 0 else 1 + int(timeout * 1000)
+            else:
+                acquire_timeout = self.acquire_timeout
 
         if self.conn is None:
             self.conn = self.engine.connect()
@@ -155,9 +161,23 @@ class Lock:
             log.debug('Lock acquire failed due to timeout')
             raise AcquireFailure(self.name, 'Failed due to timeout') from None
 
-    def acquire(self, blocking=None, acquire_timeout=None) -> bool:
+    def acquire(self, blocking=None, acquire_timeout=None, timeout=None) -> bool:
+        """
+        ``acquire_timeout`` is in milliseconds, with 0 indicating no timeout.
+
+        If ``acquire_timeout`` is ``None``, ``timeout`` is used instead, following the
+        semantics of :meth:`threading.Lock.acquire`: seconds, with -1 indicating no
+        timeout.
+
+        If neither ``acquire_timeout`` nor ``timeout`` is set, the timeout configured on
+        the lock is used (30,000 milliseconds by default).
+        """
         try:
-            return self._acquire(blocking=blocking, acquire_timeout=acquire_timeout)
+            return self._acquire(
+                blocking=blocking,
+                acquire_timeout=acquire_timeout,
+                timeout=timeout,
+            )
         except AcquireFailure:
             return False
 
