@@ -12,7 +12,7 @@ gh_org: level12
 gh_repo: pals
 project_name: PALs
 py_module: pals
-python_version: '3.14'
+python_version: '3.15'
 python_version_min: '3.12'
 script_name: ''
 use_circleci: false
