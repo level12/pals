@@ -1,8 +1,8 @@
 Changelog
 =========
 
-Unreleased
-----------
+0.20261119.1 released 2026-11-19
+--------------------------------
 
 - **BREAKING CHANGES**
 
