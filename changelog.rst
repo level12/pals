@@ -1,6 +1,32 @@
 Changelog
 =========
 
+0.20261119.1 released 2026-11-19
+--------------------------------
+
+- **BREAKING CHANGES**
+
+  - require Python 3.12 or newer and test releases through Python 3.15
+
+- allow disabling the defensive ``pg_advisory_unlock_all()`` call when a
+  connection returns to the pool (thanks to @moser) (21708d3_)
+- roll back the transaction opened by the defensive connection-checkin cleanup
+  (836ab89_)
+- add a ``threading.Lock``-compatible timeout in seconds to ``Lock.acquire()``
+  while retaining the existing millisecond timeout API (1c379e7_)
+- support nested acquisition of the same lock on one connection (7cbf633_)
+- modernize packaging and development tooling with Coppy, uv, Nox, prek, Ruff,
+  and GitHub Actions (71d95b0_)
+- build and validate distributions in CI and publish tagged releases to PyPI
+  using trusted publishing (6c668ba_)
+
+.. _21708d3: https://github.com/level12/pals/commit/21708d3
+.. _836ab89: https://github.com/level12/pals/commit/836ab89
+.. _1c379e7: https://github.com/level12/pals/commit/1c379e7
+.. _7cbf633: https://github.com/level12/pals/commit/7cbf633
+.. _71d95b0: https://github.com/level12/pals/commit/71d95b0
+.. _6c668ba: https://github.com/level12/pals/commit/6c668ba
+
 0.4.0 released 2024-04-16
 -------------------------
 
